@@ -14,5 +14,5 @@ The app loads the local game files; an internet connection is only needed for op
 
 ## Publish an update
 
-The packaged app checks GitHub Releases when it starts and installs downloaded updates after the app closes. To publish a release, increase the version in `package.json`, commit and push the change, then push a matching tag such as `v1.0.2`. GitHub Actions builds the Windows installer and publishes the release files automatically.
+The packaged app checks GitHub Releases when it starts and installs downloaded updates after the app closes. To publish an update, increase the version in `package.json`, commit and push to `main`. GitHub Actions builds the Windows installer and publishes a matching release automatically. Commits that keep the same version do not create duplicate releases.
 
