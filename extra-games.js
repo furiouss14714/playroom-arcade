@@ -3,7 +3,7 @@
     clicker: ['COIN CLICKER', '16 / IDLE', 'Tap, buy upgrades, collect skins, and rebirth for permanent power. Your progress saves automatically.'],
     wordle: ['FIVE LETTER', '17 / WORDS', 'Guess the five-letter word in six tries. Green is right spot; gold is in the word.'],
     blackjack: ['BLACKJACK', '18 / CHANCE', 'Try to beat the dealer without going over 21.'],
-    pong: ['PONG DUEL', '19 / ARCADE', 'Move with W/S or ↑/↓. The arcade opponent eases into its shots. First to five wins.'],
+    pong: ['PONG DUEL', '19 / ARCADE', 'Move with W/S or ↑/↓. The ball starts slower and speeds up slightly after paddle hits. First to five wins.'],
     breakout: ['BRICK BREAKER', '20 / ARCADE', 'Move with ←/→ or A/D. Break every brick without dropping the ball.'],
     higherlower: ['HIGHER OR LOWER', '21 / CHANCE', 'Guess if the next card will be higher or lower. Build the longest streak.'],
     diceduel: ['DICE DUEL', '22 / CHANCE', 'Roll against the arcade. First to three wins the match.'],
@@ -11,7 +11,7 @@
     sequence: ['NUMBER SEQUENCE', '24 / MEMORY', 'Memorize each number string and type it back. How long can you last?'],
     targettap: ['TARGET TAP', '25 / ACTION', 'Tap the moving star as many times as you can in twenty seconds.'],
     patternlock: ['PATTERN LOCK', '26 / MEMORY', 'Watch the glowing path, then repeat it in order. Each round adds another step.'],
-    dodgedrop: ['DODGE DROP', '27 / ACTION', 'Move left and right to dodge the falling blocks. Use arrow keys or A and D.'],
+    dodgedrop: ['DODGE DROP', '27 / ACTION', 'Move left and right to dodge the falling blocks. The pace rises as you survive. Use arrow keys or A and D.'],
     oddoneout: ['ODD ONE OUT', '28 / FOCUS', 'Find the one symbol that is different. Each round gets a little busier.']
   };
   const modal = document.getElementById('game-modal');
@@ -59,6 +59,7 @@
       { id: 'tiger', name: 'TIGER', cost: 24000, face: '🐯' },
       { id: 'starlight', name: 'STARLIGHT', cost: 35000, face: '✨' }
     ];
+    let bonusTimer, bonusExpiry, frenzyTimer, activeBonus = null, frenzyUntil = 0;
     const wrap = $('div', 'clicker-wrap');
     const wallet = $('div', 'clicker-wallet');
     const coinCount = $('strong', 'clicker-count');
@@ -67,6 +68,12 @@
     const coin = $('button', `coin-button skin-${data.skin}`);
     coin.type = 'button'; coin.setAttribute('aria-label', 'Tap to earn coins');
     coin.innerHTML = '<span class="coin-face"></span><span class="coin-tap">TAP!</span>';
+    const bonus = $('div', 'clicker-event');
+    const bonusTitle = $('strong', 'clicker-event-title');
+    const bonusText = $('span', 'clicker-event-copy');
+    const bonusClaim = $('button', 'clicker-event-claim');
+    bonus.append(bonusTitle, bonusText, bonusClaim);
+    bonus.hidden = true;
     const shop = $('div', 'clicker-shop');
     const upgradeHeading = $('h3', '', 'UPGRADES');
     const upgrades = [
@@ -86,12 +93,13 @@
     const skinHeading = $('h3', '', 'SKINS');
     const skinList = $('div', 'skin-list');
     shop.append(upgradeHeading, ...upgradeButtons, rebirthHeading, rebirthButton, skinHeading, skinList);
-    wrap.append(wallet, coin, shop); board.append(wrap);
+    wrap.append(wallet, coin, bonus, shop); board.append(wrap);
     function save() { localStorage.setItem(key, JSON.stringify(data)); }
     function paint() {
       coinCount.textContent = Math.floor(data.coins).toLocaleString();
       coinLabel.textContent = `COINS · REBIRTH ${data.rebirths}`;
       coin.className = `coin-button skin-${data.skin}`;
+      coin.classList.toggle('frenzy-active', frenzyUntil > Date.now());
       coin.querySelector('.coin-face').textContent = skins.find(s => s.id === data.skin)?.face || '🟡';
       upgrades.forEach((u, i) => {
         const cost = u.cost(), b = upgradeButtons[i];
@@ -119,21 +127,57 @@
       });
       save();
     }
-    coin.onclick = () => {
+    function baseTap() {
+      return data.power * Math.pow(2, data.multiplierLevel) * Math.pow(2, Math.min(20, data.rebirths)) * Math.pow(1.1, data.growthLevel);
+    }
+    function earnTap() {
       const prestige = Math.pow(2, Math.min(20, data.rebirths));
       const growth = Math.pow(1.1, data.growthLevel);
-      const base = data.power * Math.pow(2, data.multiplierLevel) * prestige * growth;
+      const base = data.power * Math.pow(2, data.multiplierLevel) * prestige * growth * (frenzyUntil > Date.now() ? 6 : 1);
       const critical = Math.random() < Math.min(0.5, data.criticalLevel * 0.02);
       const lucky = !critical && Math.random() < Math.min(0.5, data.luckyLevel * 0.05);
       const earned = Math.round(base * (critical ? 25 : lucky ? 5 : 1));
       data.coins += earned; paint();
-      status.textContent = critical ? `CRITICAL TAP! +${earned} COINS` : lucky ? `LUCKY TAP! +${earned} COINS` : `+${earned} COINS`;
+      status.textContent = frenzyUntil > Date.now() ? `CLICKING FRENZY ×6! +${earned} COINS` : critical ? `CRITICAL TAP! +${earned} COINS` : lucky ? `LUCKY TAP! +${earned} COINS` : `+${earned} COINS`;
       const burst = $('span', 'coin-float', `+${earned}`); wrap.append(burst); setTimeout(() => burst.remove(), 850);
       coin.classList.remove('coin-pop'); void coin.offsetWidth; coin.classList.add('coin-pop');
+    }
+    coin.onclick = earnTap;
+    function scheduleBonus(delay = 25000 + Math.random() * 35000) {
+      clearTimeout(bonusTimer);
+      bonusTimer = setTimeout(() => {
+        if (activeBonus || frenzyUntil > Date.now()) return scheduleBonus(10000);
+        activeBonus = Math.random() < .52 ? 'frenzy' : 'jackpot';
+        bonusTitle.textContent = activeBonus === 'frenzy' ? '⚡ CLICKING FRENZY' : '✦ LUCKY COIN DROP';
+        bonusText.textContent = activeBonus === 'frenzy' ? 'Claim 10 seconds of ×6 tap power!' : 'A rare pile of coins is waiting!';
+        bonusClaim.textContent = activeBonus === 'frenzy' ? 'START FRENZY' : 'CLAIM COINS';
+        bonus.hidden = false;
+        bonusExpiry = setTimeout(() => { activeBonus = null; bonus.hidden = true; scheduleBonus(); }, 12000);
+      }, delay);
+    }
+    bonusClaim.onclick = () => {
+      if (activeBonus === 'jackpot') {
+        const earned = Math.max(75, Math.round(baseTap() * (30 + Math.floor(Math.random() * 41))));
+        data.coins += earned; status.textContent = `LUCKY DROP! +${earned.toLocaleString()} COINS`;
+        const burst = $('span', 'coin-float', `+${earned.toLocaleString()}`); wrap.append(burst); setTimeout(() => burst.remove(), 1000);
+        paint();
+      } else if (activeBonus === 'frenzy') {
+        frenzyUntil = Date.now() + 10000; clearInterval(frenzyTimer);
+        bonusTitle.textContent = '⚡ FRENZY ACTIVE'; bonusText.textContent = 'Every tap earns six times more!';
+        bonusClaim.textContent = '10'; status.textContent = 'CLICKING FRENZY — TAP FAST!'; paint();
+        frenzyTimer = setInterval(() => {
+          const left = Math.max(0, Math.ceil((frenzyUntil - Date.now()) / 1000));
+          bonusClaim.textContent = String(left);
+          if (!left) { clearInterval(frenzyTimer); frenzyUntil = 0; bonus.hidden = true; paint(); scheduleBonus(); }
+        }, 200);
+      }
+      clearTimeout(bonusExpiry); activeBonus = null;
+      if (bonusTitle.textContent !== '⚡ FRENZY ACTIVE') { bonus.hidden = true; scheduleBonus(); }
     };
+    scheduleBonus();
     const timer = setInterval(() => { const income = Math.round((data.auto + data.turboLevel * 5 + data.autoBoostLevel * 20) * Math.pow(2, Math.min(20, data.rebirths)) * Math.pow(1.1, data.growthLevel)); if (income) { data.coins += income; paint(); } }, 1000);
     paint(); status.textContent = 'UPGRADES, SKINS & REBIRTHS SAVE ON THIS DEVICE';
-    return () => clearInterval(timer);
+    return () => { clearInterval(timer); clearTimeout(bonusTimer); clearTimeout(bonusExpiry); clearInterval(frenzyTimer); };
   }
 
   function higherlower() {
@@ -307,7 +351,7 @@
   }
 
   function dodgedrop() {
-    const columns = 7, rows = 7, slots = [], rocks = new Map(); let player = 3, nextId = 0, score = 0, timer, ended = false;
+    const columns = 7, rows = 7, slots = [], rocks = new Map(); let player = 3, nextId = 0, score = 0, dodged = 0, timer, ended = false;
     const grid = $('div', 'dodge-grid'); board.append(grid);
     for (let i = 0; i < columns * rows; i++) { const slot = $('div', 'dodge-slot'); slots.push(slot); grid.append(slot); }
     const runner = $('span', 'dodge-player', '◆'); slots[(rows - 1) * columns + player].append(runner);
@@ -321,22 +365,23 @@
     }
     function paint() {
       move(runner, slots[(rows - 1) * columns + player]);
-      for (const [id, rock] of rocks) { if (rock.row >= rows) { rock.node.remove(); rocks.delete(id); continue; } move(rock.node, slots[rock.row * columns + rock.column]); }
+      for (const [id, rock] of rocks) { if (rock.row >= rows) { rock.node.remove(); rocks.delete(id); dodged++; continue; } move(rock.node, slots[rock.row * columns + rock.column]); }
     }
-    function finish() { ended = true; clearInterval(timer); status.textContent = `CRASH! YOU DODGED ${score} BLOCKS.`; }
+    function finish() { ended = true; clearInterval(timer); status.textContent = `CRASH AFTER ${score} STEPS · ${dodged} BLOCKS DODGED.`; }
     function step() {
       if (ended) return;
       for (const rock of rocks.values()) rock.row++;
       if (Math.random() < .82) { const column = Math.floor(Math.random() * columns), id = nextId++; const node = $('span', 'dodge-rock', '■'); rocks.set(id, { id, column, row: 0, node }); }
       if ([...rocks.values()].some(rock => rock.row === rows - 1 && rock.column === player)) { paint(); finish(); return; }
-      score++; paint(); status.textContent = `DODGED ${score} BLOCKS · AVOID THE RED`; 
+      score++; paint(); status.textContent = `SURVIVED ${score} STEPS · SPEED ${Math.min(5, 1 + Math.floor(score / 15))} · AVOID THE RED`;
+      clearInterval(timer); timer = setInterval(step, Math.max(340, 560 - Math.floor(score / 15) * 42));
     }
     const onKey = e => { const key = e.key.toLowerCase(); if (!['arrowleft','arrowright','a','d'].includes(key)) return; e.preventDefault(); if (ended) return; player = Math.max(0, Math.min(columns - 1, player + (key === 'arrowleft' || key === 'a' ? -1 : 1))); paint(); };
     window.addEventListener('keydown', onKey);
     const left = button('◀ LEFT', () => { if (!ended) { player = Math.max(0, player - 1); paint(); } }, true);
     const right = button('RIGHT ▶', () => { if (!ended) { player = Math.min(columns - 1, player + 1); paint(); } }, true);
     button('PLAY AGAIN ↻', start);
-    function start() { clearInterval(timer); rocks.forEach(rock => rock.node.remove()); rocks.clear(); player = 3; score = 0; ended = false; paint(); status.textContent = 'READY — DODGE THE FALLING BLOCKS'; timer = setInterval(step, 560); }
+    function start() { clearInterval(timer); rocks.forEach(rock => rock.node.remove()); rocks.clear(); player = 3; score = 0; dodged = 0; ended = false; paint(); status.textContent = 'READY — DODGE THE FALLING BLOCKS'; timer = setInterval(step, 560); }
     start(); return () => { clearInterval(timer); window.removeEventListener('keydown', onKey); };
   }
 
@@ -426,17 +471,17 @@
 
   function pong() {
     const canvas=$('canvas','arcade-canvas'); canvas.width=480; canvas.height=300; board.append(canvas);
-    const ctx=canvas.getContext('2d'); let py=120, ay=120, x=240,y=150,vx=4,vy=2,ps=0,as=0,held={},raf,paused=false;
-    function resetBall(toward) { x=240;y=150;vx=toward*4;vy=(Math.random()-.5)*4; }
+    const ctx=canvas.getContext('2d'); let py=120, ay=120, x=240,y=150,vx=3.25,vy=1.5,ps=0,as=0,held={},raf,paused=false;
+    function resetBall(toward) { x=240;y=150;vx=toward*3.25;vy=(Math.random()-.5)*3.2; if(Math.abs(vy)<.7)vy=Math.sign(vy||1)*.7; }
     function draw() {
       ctx.fillStyle='#17181b';ctx.fillRect(0,0,480,300);ctx.fillStyle='#f3f1e9';
       for(let yy=8;yy<300;yy+=22)ctx.fillRect(238,yy,4,12);
       ctx.font='bold 32px DM Mono,monospace';ctx.textAlign='center';ctx.fillText(ps,190,43);ctx.fillText(as,290,43);
       ctx.fillRect(18,py,9,60);ctx.fillRect(453,ay,9,60);ctx.beginPath();ctx.arc(x,y,7,0,Math.PI*2);ctx.fill();
     }
-    function frame(){if(paused)return; if(held.ArrowUp||held.w)py=Math.max(0,py-6);if(held.ArrowDown||held.s)py=Math.min(240,py+6);const aiTarget=Math.max(0,Math.min(240,y-30)),aiStep=Math.max(-2.2,Math.min(2.2,(aiTarget-ay)*.035));ay=Math.max(0,Math.min(240,ay+aiStep));x+=vx;y+=vy;
-      if(y<7||y>293)vy*=-1;if(vx<0&&x<32&&y>py-4&&y<py+64){vx=Math.abs(vx)*1.04;vy+=(y-(py+30))*.09}
-      if(vx>0&&x>448&&y>ay-4&&y<ay+64){vx=-Math.abs(vx)*1.04;vy+=(y-(ay+30))*.09}
+    function frame(){if(paused)return; if(held.ArrowUp||held.w)py=Math.max(0,py-5.4);if(held.ArrowDown||held.s)py=Math.min(240,py+5.4);const aiTarget=Math.max(0,Math.min(240,y-30)),aiStep=Math.max(-1.25,Math.min(1.25,(aiTarget-ay)*.022));ay=Math.max(0,Math.min(240,ay+aiStep));x+=vx;y+=vy;
+      if(y<7||y>293)vy*=-1;if(vx<0&&x<32&&y>py-4&&y<py+64){vx=Math.min(5.1,Math.abs(vx)*1.035);vy+=(y-(py+30))*.075;vy=Math.max(-3.3,Math.min(3.3,vy))}
+      if(vx>0&&x>448&&y>ay-4&&y<ay+64){vx=-Math.min(5.1,Math.abs(vx)*1.035);vy+=(y-(ay+30))*.075;vy=Math.max(-3.3,Math.min(3.3,vy))}
       if(x<0){as++;resetBall(-1)}if(x>480){ps++;resetBall(1)}draw();
       if(ps>=5||as>=5){paused=true;status.textContent=ps>=5?'YOU WIN THE MATCH!':'ARCADE WINS THIS MATCH';return}raf=requestAnimationFrame(frame);
     }
@@ -452,7 +497,7 @@
     const ctx=canvas.getContext('2d');let paddle=170,ball={x:210,y:260,dx:3,dy:-4},bricks=[],keys={},lives=3,running=true,timer;
     function reset(){bricks=[];for(let r=0;r<4;r++)for(let c=0;c<10;c++)bricks.push({x:12+c*40,y:28+r*22,on:true,color:['#ff718d','#859fff','#d9f365','#ffc36b'][r]});paddle=170;ball={x:210,y:260,dx:3,dy:-4};lives=3;running=true;status.textContent='3 LIVES · BREAK EVERY BRICK';draw()}
     function draw(){ctx.fillStyle='#17181b';ctx.fillRect(0,0,420,300);bricks.filter(b=>b.on).forEach(b=>{ctx.fillStyle=b.color;ctx.fillRect(b.x,b.y,36,15)});ctx.fillStyle='#f3f1e9';ctx.fillRect(paddle,280,80,8);ctx.beginPath();ctx.arc(ball.x,ball.y,6,0,Math.PI*2);ctx.fill();ctx.font='12px DM Mono,monospace';ctx.fillText(`LIVES ${lives}`,8,292)}
-    function tick(){if(!running)return;if(keys.ArrowLeft||keys.a)paddle=Math.max(0,paddle-6);if(keys.ArrowRight||keys.d)paddle=Math.min(340,paddle+6);ball.x+=ball.dx;ball.y+=ball.dy;if(ball.x<6||ball.x>414)ball.dx*=-1;if(ball.y<6)ball.dy=Math.abs(ball.dy);if(ball.y>273&&ball.y<290&&ball.x>paddle-2&&ball.x<paddle+82){ball.dy=-Math.abs(ball.dy);ball.dx+=(ball.x-(paddle+40))*.04}for(const b of bricks)if(b.on&&ball.x>b.x&&ball.x<b.x+36&&ball.y>b.y&&ball.y<b.y+15){b.on=false;ball.dy*=-1;break}if(ball.y>306){lives--;if(lives<=0){running=false;status.textContent='OUT OF LIVES · TRY AGAIN'}else ball={x:210,y:260,dx:3,dy:-4}}if(bricks.every(b=>!b.on)){running=false;status.textContent='ALL CLEAR — YOU WIN!'}draw()}
+    function tick(){if(!running)return;if(keys.ArrowLeft||keys.a)paddle=Math.max(0,paddle-6);if(keys.ArrowRight||keys.d)paddle=Math.min(340,paddle+6);ball.x+=ball.dx;ball.y+=ball.dy;if(ball.x<6||ball.x>414)ball.dx*=-1;if(ball.y<6)ball.dy=Math.abs(ball.dy);if(ball.y>273&&ball.y<290&&ball.x>paddle-2&&ball.x<paddle+82){ball.dy=-Math.abs(ball.dy);ball.dx=Math.max(-5,Math.min(5,ball.dx+(ball.x-(paddle+40))*.04))}for(const b of bricks)if(b.on&&ball.x>b.x&&ball.x<b.x+36&&ball.y>b.y&&ball.y<b.y+15){b.on=false;ball.dy*=-1;break}if(ball.y>306){lives--;if(lives<=0){running=false;status.textContent='OUT OF LIVES · TRY AGAIN'}else ball={x:210,y:260,dx:3,dy:-4}}if(bricks.every(b=>!b.on)){running=false;status.textContent='ALL CLEAR — YOU WIN!'}draw()}
     const onKey=e=>{const k=e.key.toLowerCase();if(['arrowleft','arrowright','a','d'].includes(k)){keys[k==='arrowleft'?'ArrowLeft':k==='arrowright'?'ArrowRight':k]=e.type==='keydown';e.preventDefault()}};
     window.addEventListener('keydown',onKey);window.addEventListener('keyup',onKey);timer=setInterval(tick,16);button('RESTART ↻',reset,true);reset();
     return()=>{clearInterval(timer);window.removeEventListener('keydown',onKey);window.removeEventListener('keyup',onKey)};
