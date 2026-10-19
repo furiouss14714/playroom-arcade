@@ -32,6 +32,8 @@ function createWindow() {
     backgroundColor: '#f3f1e9',
     autoHideMenuBar: true,
     webPreferences: {
+      preload: path.join(__dirname, 'preload.cjs'),
+      additionalArguments: [`--app-version=${app.getVersion()}`],
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true

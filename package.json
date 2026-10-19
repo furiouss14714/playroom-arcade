@@ -1,6 +1,6 @@
 {
   "name": "playroom-arcade",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "A little collection of games for your desktop.",
   "main": "main.cjs",
   "author": "Playroom",
@@ -32,7 +32,8 @@
       "styles.css",
       "script.js",
       "extra-games.js",
-      "main.cjs"
+      "main.cjs",
+      "preload.cjs"
     ],
     "win": {
       "target": "nsis"
