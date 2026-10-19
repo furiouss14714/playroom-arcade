@@ -26,7 +26,7 @@
     });
   }else if(updateButton){updateButton.hidden=true;}
   const modal=document.getElementById('game-modal'), board=document.getElementById('game-board'), status=document.getElementById('game-status'), instructions=document.getElementById('game-instructions'), title=document.getElementById('game-name'), category=document.getElementById('game-category'), controls=document.getElementById('game-controls');
-  let cleanup=()=>{}, keyHandler=null, sound=localStorage.getItem('playroom.sound')==='on', audioContext=null;
+  let cleanup=()=>{}, keyHandler=null, sound=localStorage.getItem('playroom.sound')!=='off', audioContext=null;
   const gameTimeouts=new Set();
   function gameTimeout(fn,delay){let timer;timer=window.setTimeout(()=>{gameTimeouts.delete(timer);fn()},delay);gameTimeouts.add(timer);return timer}
   function resetGameTimeouts(){gameTimeouts.forEach(clearTimeout);gameTimeouts.clear()}
