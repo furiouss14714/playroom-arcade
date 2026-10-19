@@ -1,6 +1,6 @@
 {
   "name": "playroom-arcade",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "A little collection of games for your desktop.",
   "main": "main.cjs",
   "author": "Playroom",
@@ -21,12 +21,14 @@
     "appId": "com.playroom.arcade",
     "productName": "Playroom Arcade",
     "artifactName": "Playroom-Setup-${version}.${ext}",
-    "publish": [{
-      "provider": "github",
-      "owner": "furiouss14714",
-      "repo": "playroom-arcade",
-      "releaseType": "release"
-    }],
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "furiouss14714",
+        "repo": "playroom-arcade",
+        "releaseType": "release"
+      }
+    ],
     "files": [
       "index.html",
       "styles.css",

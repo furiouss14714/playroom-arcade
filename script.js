@@ -1,6 +1,30 @@
 (() => {
   const versionLabel=document.getElementById('app-version');
   if(versionLabel&&window.playroomApp?.version)versionLabel.textContent=`V${window.playroomApp.version}`;
+  const luckyButton=document.getElementById('lucky-button');
+  luckyButton?.addEventListener('click',()=>{
+    const cards=[...document.querySelectorAll('.game-card')];
+    if(!cards.length)return;
+    cards[Math.floor(Math.random()*cards.length)].click();
+  });
+  const updateButton=document.getElementById('update-button');
+  if(updateButton&&window.playroomApp?.checkForUpdates){
+    let resetTimer;
+    const showUpdateState=({state,percent}={})=>{
+      clearTimeout(resetTimer);
+      const labels={checking:'CHECKING…',available:'UPDATE FOUND',downloading:`DOWNLOADING ${percent??0}%`,installing:'RESTARTING…',latest:'UP TO DATE',error:'UPDATE FAILED',unavailable:'NOT AVAILABLE'};
+      updateButton.textContent=labels[state]||'CHECK UPDATES';
+      updateButton.disabled=['checking','available','downloading','installing'].includes(state);
+      if(['latest','error','unavailable'].includes(state))resetTimer=setTimeout(()=>showUpdateState({state:'ready'}),3500);
+      if(state==='ready'){updateButton.textContent='CHECK UPDATES';updateButton.disabled=false;}
+    };
+    window.playroomApp.onUpdateStatus(showUpdateState);
+    updateButton.addEventListener('click',async()=>{
+      showUpdateState({state:'checking'});
+      const result=await window.playroomApp.checkForUpdates();
+      if(result?.state==='latest'||result?.state==='error'||result?.state==='unavailable')showUpdateState(result);
+    });
+  }else if(updateButton){updateButton.hidden=true;}
   const modal=document.getElementById('game-modal'), board=document.getElementById('game-board'), status=document.getElementById('game-status'), instructions=document.getElementById('game-instructions'), title=document.getElementById('game-name'), category=document.getElementById('game-category'), controls=document.getElementById('game-controls');
   let cleanup=()=>{}, keyHandler=null, sound=false;
   const games={memory:{name:'MEMORY MATCH',category:'01 / FOCUS',instructions:'Flip two cards. Find every matching pair.'},ttt:{name:'TIC TAC TOE',category:'02 / QUICK THINK',instructions:'You’re ×. Get three in a row before the computer.'},rps:{name:'ROCK PAPER SCISSORS',category:'03 / CHANCE',instructions:'Pick your move. The arcade will pick its own.'},snake:{name:'SNAKE BREAK',category:'04 / FLOW STATE',instructions:'Collect ✳ without running into yourself. Use arrows or WASD.'},'2048':{name:'TILE TRIP',category:'05 / PUZZLE',instructions:'Slide matching tiles together to reach 2048.'},guess:{name:'NUMBER HUNT',category:'06 / LOGIC',instructions:'I picked a number from 1 to 100. Can you find it in 7 tries?'},reaction:{name:'QUICK DRAW',category:'07 / REFLEX',instructions:'Wait for green, then tap as fast as you can.'},whack:{name:'MOLE PATROL',category:'08 / ACTION',instructions:'Tap the ✳ as it pops up. You have 20 seconds.'},hangman:{name:'WORD GUESS',category:'09 / WORDS',instructions:'Guess the hidden word before the little doodle is complete.'},simon:{name:'SIMON SAYS',category:'10 / MEMORY',instructions:'Watch the sequence, then repeat it in order.'},scramble:{name:'WORD SCRAMBLE',category:'11 / WORDS',instructions:'Unscramble the letters. Need a hint? The category is shown.'},math:{name:'MATH SPRINT',category:'12 / QUICK THINK',instructions:'Solve ten quick sums. See how many you can get right.'},connect:{name:'FOUR IN A ROW',category:'13 / STRATEGY',instructions:'You are red. Drop four in a row before blue does.'},lights:{name:'LIGHTS OUT',category:'14 / PUZZLE',instructions:'Tap a light to flip it and its neighbors. Turn every light off.'},mines:{name:'MINE SWEEPER',category:'15 / PUZZLE',instructions:'Reveal every safe tile. Numbers tell you how many mines touch it.'},clicker:{name:'COIN CLICKER',category:'16 / IDLE',instructions:'Tap for coins, buy upgrades, and unlock new looks. Your progress saves automatically.'},wordle:{name:'FIVE LETTER',category:'17 / WORDS',instructions:'Guess the five-letter word in six tries. Green is right spot; gold is in the word.'},blackjack:{name:'BLACKJACK',category:'18 / CHANCE',instructions:'Try to beat the dealer without going over 21.'},pong:{name:'PONG DUEL',category:'19 / ARCADE',instructions:'Move with W/S or ↑/↓. First to five wins.'},breakout:{name:'BRICK BREAKER',category:'20 / ARCADE',instructions:'Move with ←/→ or A/D. Break every brick without dropping the ball.'}};
