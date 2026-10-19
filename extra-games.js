@@ -68,11 +68,9 @@
     const coin = $('button', `coin-button skin-${data.skin}`);
     coin.type = 'button'; coin.setAttribute('aria-label', 'Tap to earn coins');
     coin.innerHTML = '<span class="coin-face"></span><span class="coin-tap">TAP!</span>';
-    const bonus = $('div', 'clicker-event');
-    const bonusTitle = $('strong', 'clicker-event-title');
-    const bonusText = $('span', 'clicker-event-copy');
-    const bonusClaim = $('button', 'clicker-event-claim');
-    bonus.append(bonusTitle, bonusText, bonusClaim);
+    const bonus = $('button', 'clicker-event');
+    bonus.type = 'button';
+    bonus.setAttribute('aria-label', '');
     bonus.hidden = true;
     const shop = $('div', 'clicker-shop');
     const upgradeHeading = $('h3', '', 'UPGRADES');
@@ -148,14 +146,18 @@
       bonusTimer = setTimeout(() => {
         if (activeBonus || frenzyUntil > Date.now()) return scheduleBonus(10000);
         activeBonus = Math.random() < .52 ? 'frenzy' : 'jackpot';
-        bonusTitle.textContent = activeBonus === 'frenzy' ? '⚡ CLICKING FRENZY' : '✦ LUCKY COIN DROP';
-        bonusText.textContent = activeBonus === 'frenzy' ? 'Claim 10 seconds of ×6 tap power!' : 'A rare pile of coins is waiting!';
-        bonusClaim.textContent = activeBonus === 'frenzy' ? 'START FRENZY' : 'CLAIM COINS';
+        bonus.setAttribute('aria-label', activeBonus === 'frenzy' ? 'Collect the clicking frenzy power-up' : 'Collect the rare coin bonus');
+        bonus.innerHTML = activeBonus === 'frenzy'
+          ? '<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="21" fill="#ffe978" stroke="#17181b" stroke-width="2.5"/><path d="m27 5-14 23h10l-2 15 15-24H26z" fill="#ff704d" stroke="#17181b" stroke-width="2" stroke-linejoin="round"/></svg>'
+          : '<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="21" fill="#9df2d2" stroke="#17181b" stroke-width="2.5"/><circle cx="24" cy="24" r="15" fill="#ffe978" stroke="#17181b" stroke-width="2"/><path d="m24 12 3.5 7.3 8 .9-5.9 5.4 1.6 7.8-7.2-3.9-7.2 3.9 1.6-7.8-5.9-5.4 8-.9z" fill="#ff985c" stroke="#17181b" stroke-width="1.5" stroke-linejoin="round"/></svg>';
         bonus.hidden = false;
-        bonusExpiry = setTimeout(() => { activeBonus = null; bonus.hidden = true; scheduleBonus(); }, 12000);
+        bonusExpiry = setTimeout(() => { activeBonus = null; bonus.hidden = true; scheduleBonus(); }, 14000);
       }, delay);
     }
-    bonusClaim.onclick = () => {
+    bonus.onclick = () => {
+      if (!activeBonus) return;
+      clearTimeout(bonusExpiry);
+      bonus.hidden = true;
       if (activeBonus === 'jackpot') {
         const earned = Math.max(75, Math.round(baseTap() * (30 + Math.floor(Math.random() * 41))));
         data.coins += earned; status.textContent = `LUCKY DROP! +${earned.toLocaleString()} COINS`;
@@ -163,16 +165,14 @@
         paint();
       } else if (activeBonus === 'frenzy') {
         frenzyUntil = Date.now() + 10000; clearInterval(frenzyTimer);
-        bonusTitle.textContent = '⚡ FRENZY ACTIVE'; bonusText.textContent = 'Every tap earns six times more!';
-        bonusClaim.textContent = '10'; status.textContent = 'CLICKING FRENZY — TAP FAST!'; paint();
+        status.textContent = 'CLICKING FRENZY ×6 — TAP FAST!'; paint();
         frenzyTimer = setInterval(() => {
           const left = Math.max(0, Math.ceil((frenzyUntil - Date.now()) / 1000));
-          bonusClaim.textContent = String(left);
-          if (!left) { clearInterval(frenzyTimer); frenzyUntil = 0; bonus.hidden = true; paint(); scheduleBonus(); }
+          if (!left) { clearInterval(frenzyTimer); frenzyUntil = 0; paint(); scheduleBonus(); }
         }, 200);
       }
-      clearTimeout(bonusExpiry); activeBonus = null;
-      if (bonusTitle.textContent !== '⚡ FRENZY ACTIVE') { bonus.hidden = true; scheduleBonus(); }
+      activeBonus = null;
+      if (frenzyUntil <= Date.now()) scheduleBonus();
     };
     scheduleBonus();
     const timer = setInterval(() => { const income = Math.round((data.auto + data.turboLevel * 5 + data.autoBoostLevel * 20) * Math.pow(2, Math.min(20, data.rebirths)) * Math.pow(1.1, data.growthLevel)); if (income) { data.coins += income; paint(); } }, 1000);
@@ -471,17 +471,17 @@
 
   function pong() {
     const canvas=$('canvas','arcade-canvas'); canvas.width=480; canvas.height=300; board.append(canvas);
-    const ctx=canvas.getContext('2d'); let py=120, ay=120, x=240,y=150,vx=3.25,vy=1.5,ps=0,as=0,held={},raf,paused=false;
-    function resetBall(toward) { x=240;y=150;vx=toward*3.25;vy=(Math.random()-.5)*3.2; if(Math.abs(vy)<.7)vy=Math.sign(vy||1)*.7; }
+    const ctx=canvas.getContext('2d'); let py=120, ay=120, x=240,y=150,vx=2.25,vy=1.1,ps=0,as=0,held={},raf,paused=false;
+    function resetBall(toward) { x=240;y=150;vx=toward*2.25;vy=(Math.random()-.5)*2.4; if(Math.abs(vy)<.55)vy=Math.sign(vy||1)*.55; }
     function draw() {
       ctx.fillStyle='#17181b';ctx.fillRect(0,0,480,300);ctx.fillStyle='#f3f1e9';
       for(let yy=8;yy<300;yy+=22)ctx.fillRect(238,yy,4,12);
       ctx.font='bold 32px DM Mono,monospace';ctx.textAlign='center';ctx.fillText(ps,190,43);ctx.fillText(as,290,43);
       ctx.fillRect(18,py,9,60);ctx.fillRect(453,ay,9,60);ctx.beginPath();ctx.arc(x,y,7,0,Math.PI*2);ctx.fill();
     }
-    function frame(){if(paused)return; if(held.ArrowUp||held.w)py=Math.max(0,py-5.4);if(held.ArrowDown||held.s)py=Math.min(240,py+5.4);const aiTarget=Math.max(0,Math.min(240,y-30)),aiStep=Math.max(-1.25,Math.min(1.25,(aiTarget-ay)*.022));ay=Math.max(0,Math.min(240,ay+aiStep));x+=vx;y+=vy;
-      if(y<7||y>293)vy*=-1;if(vx<0&&x<32&&y>py-4&&y<py+64){vx=Math.min(5.1,Math.abs(vx)*1.035);vy+=(y-(py+30))*.075;vy=Math.max(-3.3,Math.min(3.3,vy))}
-      if(vx>0&&x>448&&y>ay-4&&y<ay+64){vx=-Math.min(5.1,Math.abs(vx)*1.035);vy+=(y-(ay+30))*.075;vy=Math.max(-3.3,Math.min(3.3,vy))}
+    function frame(){if(paused)return; if(held.ArrowUp||held.w)py=Math.max(0,py-5.2);if(held.ArrowDown||held.s)py=Math.min(240,py+5.2);const aiTarget=Math.max(0,Math.min(240,y-30)),aiStep=Math.max(-.92,Math.min(.92,(aiTarget-ay)*.018));ay=Math.max(0,Math.min(240,ay+aiStep));x+=vx;y+=vy;
+      if(y<7||y>293)vy*=-1;if(vx<0&&x<32&&y>py-4&&y<py+64){vx=Math.min(3.8,Math.abs(vx)*1.025);vy+=(y-(py+30))*.055;vy=Math.max(-2.8,Math.min(2.8,vy))}
+      if(vx>0&&x>448&&y>ay-4&&y<ay+64){vx=-Math.min(3.8,Math.abs(vx)*1.025);vy+=(y-(ay+30))*.055;vy=Math.max(-2.8,Math.min(2.8,vy))}
       if(x<0){as++;resetBall(-1)}if(x>480){ps++;resetBall(1)}draw();
       if(ps>=5||as>=5){paused=true;status.textContent=ps>=5?'YOU WIN THE MATCH!':'ARCADE WINS THIS MATCH';return}raf=requestAnimationFrame(frame);
     }
@@ -503,4 +503,3 @@
     return()=>{clearInterval(timer);window.removeEventListener('keydown',onKey);window.removeEventListener('keyup',onKey)};
   }
 })();
-
