@@ -26,7 +26,34 @@
     });
   }else if(updateButton){updateButton.hidden=true;}
   const modal=document.getElementById('game-modal'), board=document.getElementById('game-board'), status=document.getElementById('game-status'), instructions=document.getElementById('game-instructions'), title=document.getElementById('game-name'), category=document.getElementById('game-category'), controls=document.getElementById('game-controls');
-  let cleanup=()=>{}, keyHandler=null, sound=false;
+  let cleanup=()=>{}, keyHandler=null, sound=localStorage.getItem('playroom.sound')==='on', audioContext=null;
+  function playSound(kind='tap'){
+    if(!sound)return;
+    const AudioContextClass=window.AudioContext||window.webkitAudioContext;
+    if(!AudioContextClass)return;
+    try{
+      audioContext??=new AudioContextClass();
+      if(audioContext.state==='suspended')audioContext.resume();
+      const notes={tap:[520],toggle:[740,988],game:[440,660],coin:[660,880],purchase:[523,659,784]}[kind]||[520];
+      const now=audioContext.currentTime;
+      notes.forEach((frequency,index)=>{
+        const start=now+index*.055,osc=audioContext.createOscillator(),gain=audioContext.createGain();
+        osc.type=kind==='coin'||kind==='purchase'?'triangle':'sine';
+        osc.frequency.setValueAtTime(frequency,start);
+        gain.gain.setValueAtTime(.0001,start);
+        gain.gain.exponentialRampToValueAtTime(.045,start+.012);
+        gain.gain.exponentialRampToValueAtTime(.0001,start+.13);
+        osc.connect(gain);gain.connect(audioContext.destination);osc.start(start);osc.stop(start+.14);
+      });
+    }catch(error){console.warn('Arcade sound could not play',error)}
+  }
+  document.addEventListener('click',event=>{
+    if(!sound)return;
+    const button=event.target.closest('button');
+    if(!button||button.disabled)return;
+    const kind=button.id==='sound-toggle'?'toggle':button.classList.contains('game-card')?'game':button.classList.contains('coin-button')?'coin':button.classList.contains('shop-button')||button.classList.contains('skin-choice')?'purchase':'tap';
+    playSound(kind);
+  });
   const games={memory:{name:'MEMORY MATCH',category:'01 / FOCUS',instructions:'Flip two cards. Find every matching pair.'},ttt:{name:'TIC TAC TOE',category:'02 / QUICK THINK',instructions:'You’re ×. Get three in a row before the computer.'},rps:{name:'ROCK PAPER SCISSORS',category:'03 / CHANCE',instructions:'Pick your move. The arcade will pick its own.'},snake:{name:'SNAKE BREAK',category:'04 / FLOW STATE',instructions:'Collect ✳ without running into yourself. Use arrows or WASD.'},'2048':{name:'TILE TRIP',category:'05 / PUZZLE',instructions:'Slide matching tiles together to reach 2048.'},guess:{name:'NUMBER HUNT',category:'06 / LOGIC',instructions:'I picked a number from 1 to 100. Can you find it in 7 tries?'},reaction:{name:'QUICK DRAW',category:'07 / REFLEX',instructions:'Wait for green, then tap as fast as you can.'},whack:{name:'MOLE PATROL',category:'08 / ACTION',instructions:'Tap the ✳ as it pops up. You have 20 seconds.'},hangman:{name:'WORD GUESS',category:'09 / WORDS',instructions:'Guess the hidden word before the little doodle is complete.'},simon:{name:'SIMON SAYS',category:'10 / MEMORY',instructions:'Watch the sequence, then repeat it in order.'},scramble:{name:'WORD SCRAMBLE',category:'11 / WORDS',instructions:'Unscramble the letters. Need a hint? The category is shown.'},math:{name:'MATH SPRINT',category:'12 / QUICK THINK',instructions:'Solve ten quick sums. See how many you can get right.'},connect:{name:'FOUR IN A ROW',category:'13 / STRATEGY',instructions:'You are red. Drop four in a row before blue does.'},lights:{name:'LIGHTS OUT',category:'14 / PUZZLE',instructions:'Tap a light to flip it and its neighbors. Turn every light off.'},mines:{name:'MINE SWEEPER',category:'15 / PUZZLE',instructions:'Reveal every safe tile. Numbers tell you how many mines touch it.'},clicker:{name:'COIN CLICKER',category:'16 / IDLE',instructions:'Tap for coins, buy upgrades, and unlock new looks. Your progress saves automatically.'},wordle:{name:'FIVE LETTER',category:'17 / WORDS',instructions:'Guess the five-letter word in six tries. Green is right spot; gold is in the word.'},blackjack:{name:'BLACKJACK',category:'18 / CHANCE',instructions:'Try to beat the dealer without going over 21.'},pong:{name:'PONG DUEL',category:'19 / ARCADE',instructions:'Move with W/S or ↑/↓. First to five wins.'},breakout:{name:'BRICK BREAKER',category:'20 / ARCADE',instructions:'Move with ←/→ or A/D. Break every brick without dropping the ball.'}};
   function btn(text,fn,secondary=false){const b=document.createElement('button');b.className='control-btn'+(secondary?' secondary':'');b.textContent=text;b.onclick=fn;controls.appendChild(b);return b}
   function clearGame(){cleanup();cleanup=()=>{};if(keyHandler)window.removeEventListener('keydown',keyHandler);keyHandler=null;if(window.__extraGameCleanup){window.__extraGameCleanup();window.__extraGameCleanup=null}board.innerHTML='';status.textContent='';controls.innerHTML=''}
@@ -35,7 +62,10 @@
   document.querySelectorAll('.game-card').forEach(c=>c.addEventListener('click',()=>openGame(c.dataset.game)));
   document.getElementById('close-game').onclick=closeGame;modal.querySelector('[data-close]').onclick=closeGame;
   window.addEventListener('keydown',e=>{if(e.key==='Escape'&&modal.classList.contains('open'))closeGame()});
-  document.getElementById('sound-toggle').onclick=e=>{sound=!sound;e.currentTarget.innerHTML=`♪ <span>SOUND ${sound?'ON':'OFF'}</span>`};
+  const soundToggle=document.getElementById('sound-toggle');
+  function updateSoundButton(){soundToggle.innerHTML=`♪ <span>SOUND ${sound?'ON':'OFF'}</span>`;soundToggle.setAttribute('aria-pressed',String(sound))}
+  updateSoundButton();
+  soundToggle.onclick=()=>{sound=!sound;localStorage.setItem('playroom.sound',sound?'on':'off');updateSoundButton()};
   function memory(){board.innerHTML='';controls.innerHTML='';const faces=['✳','●','✦','♥','☀','◆','☻','★'];let deck=[...faces,...faces].sort(()=>Math.random()-.5),open=[],matches=0,lock=false,moves=0;const grid=document.createElement('div');grid.className='memory-board';board.append(grid);deck.forEach(face=>{const b=document.createElement('button');b.className='memory-card';b.setAttribute('aria-label','Hidden card');b.textContent='?';b.onclick=()=>{if(lock||b.classList.contains('revealed')||b.classList.contains('matched'))return;moves++;b.textContent=face;b.classList.add('revealed');b.setAttribute('aria-label',face);open.push({b,face});status.textContent=`${moves} ${moves===1?'TURN':'TURNS'} · ${matches}/8 PAIRS`;if(open.length===2){lock=true;if(open[0].face===open[1].face){open.forEach(x=>x.b.classList.add('matched'));matches++;open=[];lock=false;status.textContent=matches===8?`ALL CLEAR! ${moves} TURNS. NICE ONE.`:`${moves} TURNS · ${matches}/8 PAIRS`}else setTimeout(()=>{open.forEach(x=>{x.b.classList.remove('revealed');x.b.textContent='?';x.b.setAttribute('aria-label','Hidden card')});open=[];lock=false},650)}};grid.append(b)});status.textContent='0 TURNS · 0/8 PAIRS';btn('SHUFFLE ↻',memory,true)}
   function ttt(){board.innerHTML='';controls.innerHTML='';let cells=Array(9).fill(''),ended=false;const wins=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]],grid=document.createElement('div');grid.className='ttt-board';board.append(grid);function outcome(){const line=wins.find(l=>cells[l[0]]&&cells[l[0]]===cells[l[1]]&&cells[l[1]]===cells[l[2]]);if(line){ended=true;line.forEach(i=>grid.children[i].style.color=cells[i]==='×'?'#f05e7b':'#586ed3');status.textContent=cells[line[0]]==='×'?'YOU GOT IT. NICE PLAY.':'THE ARCADE TAKES THIS ONE.';return true}if(cells.every(Boolean)){ended=true;status.textContent='A TIE. RUN IT BACK?';return true}return false}function computer(){let options=cells.map((v,i)=>v?null:i).filter(x=>x!==null);if(!options.length)return;let move=options.find(i=>{cells[i]='○';let w=wins.some(l=>cells[l[0]]==='○'&&cells[l[1]]==='○'&&cells[l[2]]==='○');cells[i]='';return w});if(move===undefined)move=options.find(i=>{cells[i]='×';let w=wins.some(l=>cells[l[0]]==='×'&&cells[l[1]]==='×'&&cells[l[2]]==='×');cells[i]='';return w});if(move===undefined&&cells[4]==='')move=4;if(move===undefined)move=options[Math.floor(Math.random()*options.length)];cells[move]='○';grid.children[move].textContent='○';if(!outcome())status.textContent='YOUR MOVE — ×'}for(let i=0;i<9;i++){const b=document.createElement('button');b.className='ttt-cell';b.onclick=()=>{if(ended||cells[i])return;cells[i]='×';b.textContent='×';if(!outcome()){status.textContent='ARCADE THINKING…';setTimeout(()=>{if(!ended)computer()},300)}};grid.append(b)}status.textContent='YOUR MOVE — ×';btn('NEW ROUND ↻',ttt,true)}
   function rps(){const choices=[['ROCK','✊'],['PAPER','✋'],['SCISSORS','✌️']];const row=document.createElement('div');row.className='rps-options';choices.forEach(([name,icon],i)=>{const b=document.createElement('button');b.className='rps-choice';b.title=name;b.setAttribute('aria-label',name);b.textContent=icon;b.onclick=()=>{const j=Math.floor(Math.random()*3),result=i===j?'A TIE. GREAT MINDS.':(i-j+3)%3===1?'YOU WIN! NICELY PLAYED.':'ARCADE WINS THIS ROUND.';status.textContent=`YOU: ${choices[i][0]} · ARCADE: ${choices[j][0]} — ${result}`};row.append(b)});board.append(row);status.textContent='MAKE YOUR MOVE'}

@@ -14,7 +14,7 @@
   <header class="topbar">
     <a class="brand" href="#home" aria-label="Playroom home"><span class="brand-mark">P<span>•</span></span><span>PLAYROOM</span></a>
     <nav><a href="#games">THE ARCADE</a><a href="#about">ABOUT</a></nav>
-    <div class="top-right"><span class="online-dot"></span><span>OPEN FOR PLAY</span><span class="app-version" id="app-version" aria-label="App version"></span><button class="update-button" id="update-button" type="button">CHECK UPDATES</button><button class="sound-toggle" id="sound-toggle" aria-label="Toggle sound">♪ <span>SOUND OFF</span></button></div>
+    <div class="top-right"><span class="online-dot"></span><span>OPEN FOR PLAY</span><span class="app-version" id="app-version" aria-label="App version"></span><div class="theme-picker"><button class="theme-toggle" id="theme-toggle" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="theme-menu"><span class="theme-toggle-icon">◉</span><span>THEMES</span></button><section class="theme-menu" id="theme-menu" aria-label="Choose an app theme" hidden><div class="theme-menu-head"><span>CHOOSE YOUR VIBE</span><strong id="theme-current">LIGHT</strong></div><div class="theme-options" id="theme-options"></div></section></div><button class="update-button" id="update-button" type="button">CHECK UPDATES</button><button class="sound-toggle" id="sound-toggle" aria-label="Toggle sound">♪ <span>SOUND OFF</span></button></div>
   </header>
   <main id="home">
     <section class="hero">
@@ -68,6 +68,7 @@
   </main>
   <footer><a class="brand" href="#home"><span class="brand-mark">P<span>•</span></span><span>PLAYROOM</span></a><span>GOOD BREAKS, GOOD GAME.</span><span>© 2025 PLAYROOM ARCADE</span></footer>
   <div class="modal" id="game-modal" aria-hidden="true"><div class="modal-backdrop" data-close></div><section class="game-dialog" role="dialog" aria-modal="true" aria-labelledby="game-name"><header class="dialog-head"><div class="brand"><span class="brand-mark">P<span>•</span></span><span>PLAYROOM</span></div><button id="close-game" class="close-button" aria-label="Close game">×</button></header><div class="game-content"><div class="game-meta"><span id="game-category">01 / FOCUS</span><span class="online-dot"></span> READY WHEN YOU ARE</div><h2 id="game-name">MEMORY MATCH</h2><p class="game-instructions" id="game-instructions"></p><div class="game-board" id="game-board"></div><div class="game-status" id="game-status" aria-live="polite"></div><div class="game-controls" id="game-controls"></div></div><div class="dialog-footer"><span>TAKE A BREATH. TAKE YOUR TIME.</span><span>ESC TO EXIT ↗</span></div></section></div>
+  <script src="themes.js"></script>
   <script src="script.js"></script>
   <script src="extra-games.js"></script>
 </body>

@@ -3,7 +3,7 @@
     clicker: ['COIN CLICKER', '16 / IDLE', 'Tap, buy upgrades, collect skins, and rebirth for permanent power. Your progress saves automatically.'],
     wordle: ['FIVE LETTER', '17 / WORDS', 'Guess the five-letter word in six tries. Green is right spot; gold is in the word.'],
     blackjack: ['BLACKJACK', '18 / CHANCE', 'Try to beat the dealer without going over 21.'],
-    pong: ['PONG DUEL', '19 / ARCADE', 'Move with W/S or ↑/↓. First to five wins.'],
+    pong: ['PONG DUEL', '19 / ARCADE', 'Move with W/S or ↑/↓. The arcade opponent eases into its shots. First to five wins.'],
     breakout: ['BRICK BREAKER', '20 / ARCADE', 'Move with ←/→ or A/D. Break every brick without dropping the ball.'],
     higherlower: ['HIGHER OR LOWER', '21 / CHANCE', 'Guess if the next card will be higher or lower. Build the longest streak.'],
     diceduel: ['DICE DUEL', '22 / CHANCE', 'Roll against the arcade. First to three wins the match.'],
@@ -434,7 +434,7 @@
       ctx.font='bold 32px DM Mono,monospace';ctx.textAlign='center';ctx.fillText(ps,190,43);ctx.fillText(as,290,43);
       ctx.fillRect(18,py,9,60);ctx.fillRect(453,ay,9,60);ctx.beginPath();ctx.arc(x,y,7,0,Math.PI*2);ctx.fill();
     }
-    function frame(){if(paused)return; if(held.ArrowUp||held.w)py=Math.max(0,py-6);if(held.ArrowDown||held.s)py=Math.min(240,py+6);ay+=((y-30)-ay)*.075;ay=Math.max(0,Math.min(240,ay));x+=vx;y+=vy;
+    function frame(){if(paused)return; if(held.ArrowUp||held.w)py=Math.max(0,py-6);if(held.ArrowDown||held.s)py=Math.min(240,py+6);const aiTarget=Math.max(0,Math.min(240,y-30)),aiStep=Math.max(-2.2,Math.min(2.2,(aiTarget-ay)*.035));ay=Math.max(0,Math.min(240,ay+aiStep));x+=vx;y+=vy;
       if(y<7||y>293)vy*=-1;if(vx<0&&x<32&&y>py-4&&y<py+64){vx=Math.abs(vx)*1.04;vy+=(y-(py+30))*.09}
       if(vx>0&&x>448&&y>ay-4&&y<ay+64){vx=-Math.abs(vx)*1.04;vy+=(y-(ay+30))*.09}
       if(x<0){as++;resetBall(-1)}if(x>480){ps++;resetBall(1)}draw();

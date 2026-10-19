@@ -1,6 +1,8 @@
 # Playroom Arcade
 
-Playroom Arcade opens as its own desktop window and contains twenty-eight games.
+Playroom Arcade opens as its own desktop window with twenty-eight games and twenty selectable color themes.
+
+Choose a theme from the top bar. Your theme choice is saved on your device.
 
 ## Run from this folder
 
@@ -8,7 +10,7 @@ Install the app dependencies once with `npm install`, then launch it with `npm s
 
 ## Build the Windows installer
 
-Run `npm run dist`. The installer is written to `dist/Playroom-Setup-1.1.3.exe`. It creates Start Menu and desktop shortcuts.
+Run `npm run dist`. The installer is written to `dist/Playroom-Setup-1.2.0.exe`. It creates Start Menu and desktop shortcuts.
 
 The app loads the local game files; an internet connection is only needed for optional Google Fonts and update checks.
 
