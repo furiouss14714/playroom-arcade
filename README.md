@@ -10,7 +10,7 @@ Install the app dependencies once with `npm install`, then launch it with `npm s
 
 ## Build the Windows installer
 
-Run `npm run dist`. The installer is written to `dist/Playroom-Setup-1.2.4.exe`. It creates Start Menu and desktop shortcuts.
+Run `npm run dist`. The installer is written to `dist/Playroom-Setup-1.2.5.exe`. It creates Start Menu and desktop shortcuts.
 
 The app loads the local game files; an internet connection is only needed for optional Google Fonts and update checks.
 

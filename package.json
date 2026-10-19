@@ -1,6 +1,6 @@
 {
   "name": "playroom-arcade",
-  "version": "1.2.4",
+  "version": "1.2.5",
   "description": "A little collection of games for your desktop.",
   "main": "main.cjs",
   "author": "Playroom",
