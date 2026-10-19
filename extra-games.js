@@ -1,6 +1,6 @@
 (() => {
   const meta = {
-    clicker: ['COIN CLICKER', '16 / IDLE', 'Tap for coins, stack five upgrades, and unlock eight new looks. Your progress saves automatically.'],
+    clicker: ['COIN CLICKER', '16 / IDLE', 'Tap, buy upgrades, collect skins, and rebirth for permanent power. Your progress saves automatically.'],
     wordle: ['FIVE LETTER', '17 / WORDS', 'Guess the five-letter word in six tries. Green is right spot; gold is in the word.'],
     blackjack: ['BLACKJACK', '18 / CHANCE', 'Try to beat the dealer without going over 21.'],
     pong: ['PONG DUEL', '19 / ARCADE', 'Move with W/S or ↑/↓. First to five wins.'],
@@ -9,7 +9,10 @@
     diceduel: ['DICE DUEL', '22 / CHANCE', 'Roll against the arcade. First to three wins the match.'],
     colormatch: ['COLOR CHECK', '23 / REFLEX', 'Decide if the color of the word matches the word itself. Score before time runs out.'],
     sequence: ['NUMBER SEQUENCE', '24 / MEMORY', 'Memorize each number string and type it back. How long can you last?'],
-    targettap: ['TARGET TAP', '25 / ACTION', 'Tap the moving star as many times as you can in twenty seconds.']
+    targettap: ['TARGET TAP', '25 / ACTION', 'Tap the moving star as many times as you can in twenty seconds.'],
+    patternlock: ['PATTERN LOCK', '26 / MEMORY', 'Watch the glowing path, then repeat it in order. Each round adds another step.'],
+    dodgedrop: ['DODGE DROP', '27 / ACTION', 'Move left and right to dodge the falling blocks. Use arrow keys or A and D.'],
+    oddoneout: ['ODD ONE OUT', '28 / FOCUS', 'Find the one symbol that is different. Each round gets a little busier.']
   };
   const modal = document.getElementById('game-modal');
   const board = document.getElementById('game-board');
@@ -25,19 +28,19 @@
     title.textContent = info[0]; category.textContent = info[1]; instructions.textContent = info[2];
     board.innerHTML = ''; status.textContent = ''; controls.innerHTML = '';
     modal.classList.add('open'); modal.setAttribute('aria-hidden', 'false'); document.body.style.overflow = 'hidden';
-    const cleanup = ({ clicker: clicker, wordle: wordle, blackjack: blackjack, pong: pong, breakout: breakout, higherlower: higherlower, diceduel: diceduel, colormatch: colormatch, sequence: sequence, targettap: targettap })[id]();
+    const cleanup = ({ clicker: clicker, wordle: wordle, blackjack: blackjack, pong: pong, breakout: breakout, higherlower: higherlower, diceduel: diceduel, colormatch: colormatch, sequence: sequence, targettap: targettap, patternlock: patternlock, dodgedrop: dodgedrop, oddoneout: oddoneout })[id]();
     window.__extraGameCleanup = cleanup || (() => {});
   }
   window.addEventListener('playroom:open-extra', e => open(e.detail));
 
   function clicker() {
     const key = 'playroom.clicker.v1';
-    const defaults = { coins: 0, power: 1, powerLevel: 0, auto: 0, multiplierLevel: 0, luckyLevel: 0, turboLevel: 0, owned: ['classic'], skin: 'classic' };
+    const defaults = { coins: 0, power: 1, powerLevel: 0, auto: 0, multiplierLevel: 0, luckyLevel: 0, turboLevel: 0, megaLevel: 0, autoBoostLevel: 0, criticalLevel: 0, growthLevel: 0, rebirths: 0, owned: ['classic'], skin: 'classic' };
     let data;
     try { data = { ...defaults, ...JSON.parse(localStorage.getItem(key) || '{}') }; } catch { data = { ...defaults }; }
     data.owned = Array.isArray(data.owned) ? data.owned : ['classic'];
     if (!data.owned.includes('classic')) data.owned.unshift('classic');
-    ['coins', 'powerLevel', 'auto', 'multiplierLevel', 'luckyLevel', 'turboLevel'].forEach(k => { if (!Number.isFinite(data[k]) || data[k] < 0) data[k] = defaults[k]; });
+    ['coins', 'powerLevel', 'auto', 'multiplierLevel', 'luckyLevel', 'turboLevel', 'megaLevel', 'autoBoostLevel', 'criticalLevel', 'growthLevel', 'rebirths'].forEach(k => { if (!Number.isFinite(data[k]) || data[k] < 0) data[k] = defaults[k]; });
     if (!Number.isFinite(data.power) || data.power < 1) data.power = 1;
     const skins = [
       { id: 'classic', name: 'CLASSIC', cost: 0, face: '🟡' },
@@ -48,7 +51,13 @@
       { id: 'mint', name: 'MINT', cost: 1100, face: '🌿' },
       { id: 'cosmic', name: 'COSMIC', cost: 1600, face: '🌌' },
       { id: 'cherry', name: 'CHERRY', cost: 2400, face: '🍒' },
-      { id: 'gold', name: 'GOLD', cost: 4000, face: '🌟' }
+      { id: 'gold', name: 'GOLD', cost: 4000, face: '🌟' },
+      { id: 'aurora', name: 'AURORA', cost: 6000, face: '🌈' },
+      { id: 'neon', name: 'NEON', cost: 8500, face: '💚' },
+      { id: 'frost', name: 'FROST', cost: 12000, face: '🧊' },
+      { id: 'lava', name: 'LAVA', cost: 17000, face: '🌋' },
+      { id: 'tiger', name: 'TIGER', cost: 24000, face: '🐯' },
+      { id: 'starlight', name: 'STARLIGHT', cost: 35000, face: '✨' }
     ];
     const wrap = $('div', 'clicker-wrap');
     const wallet = $('div', 'clicker-wallet');
@@ -65,16 +74,23 @@
       { name: 'AUTO CLICK', info: '+1 PER SEC', level: () => data.auto, cost: () => Math.round(60 * Math.pow(1.65, data.auto)), buy: () => { data.auto++; } },
       { name: 'COIN MULTIPLIER', info: '2× TAP VALUE', level: () => data.multiplierLevel, cost: () => Math.round(400 * Math.pow(2.1, data.multiplierLevel)), buy: () => { data.multiplierLevel++; } },
       { name: 'LUCKY TAP', info: '+5% CHANCE FOR 5×', level: () => data.luckyLevel, cost: () => Math.round(250 * Math.pow(1.9, data.luckyLevel)), buy: () => { data.luckyLevel++; } },
-      { name: 'AUTO TURBO', info: '+5 PER SEC', level: () => data.turboLevel, cost: () => Math.round(900 * Math.pow(2, data.turboLevel)), buy: () => { data.turboLevel++; } }
+      { name: 'AUTO TURBO', info: '+5 PER SEC', level: () => data.turboLevel, cost: () => Math.round(900 * Math.pow(2, data.turboLevel)), buy: () => { data.turboLevel++; } },
+      { name: 'MEGA CLICK', info: '+5 PER TAP', level: () => data.megaLevel, cost: () => Math.round(300 * Math.pow(1.75, data.megaLevel)), buy: () => { data.megaLevel++; data.power += 5; } },
+      { name: 'AUTO BOOST', info: '+20 PER SEC', level: () => data.autoBoostLevel, cost: () => Math.round(2200 * Math.pow(1.85, data.autoBoostLevel)), buy: () => { data.autoBoostLevel++; } },
+      { name: 'CRITICAL TAP', info: '+2% CHANCE FOR 25×', level: () => data.criticalLevel, cost: () => Math.round(1400 * Math.pow(1.8, data.criticalLevel)), buy: () => { data.criticalLevel++; } },
+      { name: 'COIN GROWTH', info: '+10% ALL INCOME', level: () => data.growthLevel, cost: () => Math.round(3200 * Math.pow(1.9, data.growthLevel)), buy: () => { data.growthLevel++; } }
     ];
     const upgradeButtons = upgrades.map(() => $('button', 'shop-button'));
+    const rebirthHeading = $('h3', '', 'REBIRTH');
+    const rebirthButton = $('button', 'shop-button rebirth-button');
     const skinHeading = $('h3', '', 'SKINS');
     const skinList = $('div', 'skin-list');
-    shop.append(upgradeHeading, ...upgradeButtons, skinHeading, skinList);
+    shop.append(upgradeHeading, ...upgradeButtons, rebirthHeading, rebirthButton, skinHeading, skinList);
     wrap.append(wallet, coin, shop); board.append(wrap);
     function save() { localStorage.setItem(key, JSON.stringify(data)); }
     function paint() {
       coinCount.textContent = Math.floor(data.coins).toLocaleString();
+      coinLabel.textContent = `COINS · REBIRTH ${data.rebirths}`;
       coin.className = `coin-button skin-${data.skin}`;
       coin.querySelector('.coin-face').textContent = skins.find(s => s.id === data.skin)?.face || '🟡';
       upgrades.forEach((u, i) => {
@@ -83,6 +99,16 @@
         b.disabled = data.coins < cost;
         b.onclick = () => { if (data.coins < cost) return; data.coins -= cost; u.buy(); paint(); status.textContent = `${u.name} UPGRADED!`; };
       });
+      const rebirthCost = Math.round(25000 * Math.pow(6, data.rebirths));
+      rebirthButton.innerHTML = `REBIRTH ${data.rebirths + 1}<b>RESET COINS & UPGRADES · PERMANENT 2×</b><small>${rebirthCost.toLocaleString()} COINS REQUIRED</small>`;
+      rebirthButton.disabled = data.coins < rebirthCost;
+      rebirthButton.onclick = () => {
+        if (data.coins < rebirthCost) return;
+        data.coins = 0; data.power = 1; data.rebirths++;
+        ['powerLevel','auto','multiplierLevel','luckyLevel','turboLevel','megaLevel','autoBoostLevel','criticalLevel','growthLevel'].forEach(level => { data[level] = 0; });
+        paint(); status.textContent = `REBIRTH ${data.rebirths}! YOUR PERMANENT MULTIPLIER IS NOW ${Math.pow(2, data.rebirths)}×`;
+        coin.classList.remove('rebirth-pop'); void coin.offsetWidth; coin.classList.add('rebirth-pop');
+      };
       skinList.innerHTML = '';
       skins.forEach(s => {
         const b = $('button', `skin-choice skin-${s.id}${data.skin === s.id ? ' selected' : ''}`);
@@ -94,15 +120,19 @@
       save();
     }
     coin.onclick = () => {
-      const base = data.power * Math.pow(2, data.multiplierLevel);
-      const lucky = Math.random() < Math.min(0.5, data.luckyLevel * 0.05);
-      const earned = Math.round(base * (lucky ? 5 : 1));
+      const prestige = Math.pow(2, Math.min(20, data.rebirths));
+      const growth = Math.pow(1.1, data.growthLevel);
+      const base = data.power * Math.pow(2, data.multiplierLevel) * prestige * growth;
+      const critical = Math.random() < Math.min(0.5, data.criticalLevel * 0.02);
+      const lucky = !critical && Math.random() < Math.min(0.5, data.luckyLevel * 0.05);
+      const earned = Math.round(base * (critical ? 25 : lucky ? 5 : 1));
       data.coins += earned; paint();
-      status.textContent = lucky ? `LUCKY TAP! +${earned} COINS` : `+${earned} COINS`;
+      status.textContent = critical ? `CRITICAL TAP! +${earned} COINS` : lucky ? `LUCKY TAP! +${earned} COINS` : `+${earned} COINS`;
+      const burst = $('span', 'coin-float', `+${earned}`); wrap.append(burst); setTimeout(() => burst.remove(), 850);
       coin.classList.remove('coin-pop'); void coin.offsetWidth; coin.classList.add('coin-pop');
     };
-    const timer = setInterval(() => { const income = data.auto + data.turboLevel * 5; if (income) { data.coins += income; paint(); } }, 1000);
-    paint(); status.textContent = 'YOUR COINS AND SKINS SAVE ON THIS DEVICE';
+    const timer = setInterval(() => { const income = Math.round((data.auto + data.turboLevel * 5 + data.autoBoostLevel * 20) * Math.pow(2, Math.min(20, data.rebirths)) * Math.pow(1.1, data.growthLevel)); if (income) { data.coins += income; paint(); } }, 1000);
+    paint(); status.textContent = 'UPGRADES, SKINS & REBIRTHS SAVE ON THIS DEVICE';
     return () => clearInterval(timer);
   }
 
@@ -210,19 +240,35 @@
 
   function targettap() {
     let hits = 0, seconds = 20, ended = false, target = Math.floor(Math.random() * 9), timer;
-    const grid = $('div', 'target-grid');
-    const clock = $('div', 'target-clock');
+    const grid = $('div', 'target-grid'), clock = $('div', 'target-clock');
+    const star = $('span', 'target-star-icon', '✳'), cells = [];
     board.append(grid, clock);
-    const replay = button('PLAY AGAIN ↻', start, true);
-    replay.hidden = true;
-    function paint() {
-      grid.innerHTML = '';
-      for (let i = 0; i < 9; i++) {
-        const cell = $('button', `target-cell${i === target ? ' target-star' : ''}`, i === target ? '✳' : '');
-        cell.setAttribute('aria-label', i === target ? 'Tap the star target' : 'Empty target');
-        cell.disabled = ended;
-        cell.onclick = () => { if (ended || i !== target) return; hits++; target = Math.floor(Math.random() * 9); if (target === i) target = (target + 1) % 9; paint(); clock.textContent = `${hits} HITS · ${seconds} SEC`; };
-        grid.append(cell);
+    const replay = button('PLAY AGAIN ↻', start, true); replay.hidden = true;
+    for (let i = 0; i < 9; i++) {
+      const cell = $('button', 'target-cell');
+      cell.setAttribute('aria-label', 'Empty target'); cell.disabled = ended;
+      cell.onclick = () => {
+        if (ended || i !== target) return;
+        const oldRect = star.getBoundingClientRect();
+        hits++; target = Math.floor(Math.random() * 9); if (target === i) target = (target + 1) % 9;
+        paint(oldRect); clock.textContent = `${hits} HITS · ${seconds} SEC`;
+      };
+      cells.push(cell); grid.append(cell);
+    }
+    function paint(oldRect = null) {
+      cells.forEach((cell, i) => {
+        cell.classList.toggle('target-active', i === target);
+        cell.setAttribute('aria-label', i === target ? 'Tap the star target' : 'Empty target'); cell.disabled = ended;
+      });
+      const destination = cells[target];
+      if (destination && star.parentElement !== destination) {
+        const from = oldRect || (star.isConnected ? star.getBoundingClientRect() : null);
+        destination.append(star);
+        if (from) {
+          const to = star.getBoundingClientRect(), dx = from.left - to.left, dy = from.top - to.top;
+          star.style.transition = 'none'; star.style.transform = `translate(${dx}px,${dy}px)`; star.getBoundingClientRect();
+          requestAnimationFrame(() => { star.style.transition = ''; star.style.transform = ''; });
+        }
       }
     }
     function start() {
@@ -233,8 +279,84 @@
         if (seconds <= 0) { ended = true; clearInterval(timer); paint(); replay.hidden = false; status.textContent = `TIME! YOU CAUGHT ${hits} STARS.`; }
       }, 1000);
     }
-    start();
-    return () => clearInterval(timer);
+    start(); return () => clearInterval(timer);
+  }
+
+  function patternlock() {
+    const pads = Array.from({ length: 9 }, (_, i) => $('button', 'pattern-pad'));
+    const grid = $('div', 'pattern-grid'); pads.forEach((pad, i) => { pad.setAttribute('aria-label', `Pattern tile ${i + 1}`); grid.append(pad); });
+    board.append(grid);
+    let sequence = [], position = 0, locked = true, timers = new Set();
+    const later = (fn, ms) => { const timer = setTimeout(() => { timers.delete(timer); fn(); }, ms); timers.add(timer); };
+    function flash(index) { const pad = pads[index]; pad.classList.add('lit'); later(() => pad.classList.remove('lit'), 300); }
+    function nextRound() {
+      sequence.push(Math.floor(Math.random() * pads.length)); position = 0; locked = true;
+      status.textContent = `ROUND ${sequence.length} · WATCH THE PATTERN`;
+      sequence.forEach((index, i) => later(() => { flash(index); if (i === sequence.length - 1) later(() => { locked = false; status.textContent = 'YOUR TURN — REPEAT THE PATTERN'; }, 380); }, 500 + i * 600));
+    }
+    pads.forEach((pad, i) => { pad.onclick = () => {
+      if (locked) return;
+      flash(i);
+      if (i !== sequence[position]) { locked = true; status.textContent = `PATTERN BROKE AT ROUND ${sequence.length}.`; button('TRY AGAIN ↻', start, true); return; }
+      position++;
+      if (position === sequence.length) { locked = true; status.textContent = 'PERFECT! NEXT PATTERN…'; later(nextRound, 700); }
+    }; });
+    function start() { timers.forEach(clearTimeout); timers.clear(); pads.forEach(pad => pad.classList.remove('lit')); sequence = []; position = 0; nextRound(); }
+    button('START OVER ↻', start, true); start();
+    return () => timers.forEach(clearTimeout);
+  }
+
+  function dodgedrop() {
+    const columns = 7, rows = 7, slots = [], rocks = new Map(); let player = 3, nextId = 0, score = 0, timer, ended = false;
+    const grid = $('div', 'dodge-grid'); board.append(grid);
+    for (let i = 0; i < columns * rows; i++) { const slot = $('div', 'dodge-slot'); slots.push(slot); grid.append(slot); }
+    const runner = $('span', 'dodge-player', '◆'); slots[(rows - 1) * columns + player].append(runner);
+    function move(node, slot) {
+      const from = node.isConnected ? node.getBoundingClientRect() : null;
+      slot.append(node);
+      if (from) {
+        const to = node.getBoundingClientRect(), dx = from.left - to.left, dy = from.top - to.top;
+        if (dx || dy) { node.style.transition = 'none'; node.style.transform = `translate(${dx}px,${dy}px)`; node.getBoundingClientRect(); requestAnimationFrame(() => { node.style.transition = ''; node.style.transform = ''; }); }
+      }
+    }
+    function paint() {
+      move(runner, slots[(rows - 1) * columns + player]);
+      for (const [id, rock] of rocks) { if (rock.row >= rows) { rock.node.remove(); rocks.delete(id); continue; } move(rock.node, slots[rock.row * columns + rock.column]); }
+    }
+    function finish() { ended = true; clearInterval(timer); status.textContent = `CRASH! YOU DODGED ${score} BLOCKS.`; }
+    function step() {
+      if (ended) return;
+      for (const rock of rocks.values()) rock.row++;
+      if (Math.random() < .82) { const column = Math.floor(Math.random() * columns), id = nextId++; const node = $('span', 'dodge-rock', '■'); rocks.set(id, { id, column, row: 0, node }); }
+      if ([...rocks.values()].some(rock => rock.row === rows - 1 && rock.column === player)) { paint(); finish(); return; }
+      score++; paint(); status.textContent = `DODGED ${score} BLOCKS · AVOID THE RED`; 
+    }
+    const onKey = e => { const key = e.key.toLowerCase(); if (!['arrowleft','arrowright','a','d'].includes(key)) return; e.preventDefault(); if (ended) return; player = Math.max(0, Math.min(columns - 1, player + (key === 'arrowleft' || key === 'a' ? -1 : 1))); paint(); };
+    window.addEventListener('keydown', onKey);
+    const left = button('◀ LEFT', () => { if (!ended) { player = Math.max(0, player - 1); paint(); } }, true);
+    const right = button('RIGHT ▶', () => { if (!ended) { player = Math.min(columns - 1, player + 1); paint(); } }, true);
+    button('PLAY AGAIN ↻', start);
+    function start() { clearInterval(timer); rocks.forEach(rock => rock.node.remove()); rocks.clear(); player = 3; score = 0; ended = false; paint(); status.textContent = 'READY — DODGE THE FALLING BLOCKS'; timer = setInterval(step, 560); }
+    start(); return () => { clearInterval(timer); window.removeEventListener('keydown', onKey); };
+  }
+
+  function oddoneout() {
+    const grid = $('div', 'odd-grid'); board.append(grid);
+    const symbols = ['●','■','▲','✦']; let level = 1, size = 3, odd = 0;
+    function round() {
+      size = Math.min(6, 3 + Math.floor((level - 1) / 3)); const total = size * size;
+      const common = symbols[Math.floor(Math.random() * symbols.length)]; let different; do { different = symbols[Math.floor(Math.random() * symbols.length)]; } while (different === common);
+      odd = Math.floor(Math.random() * total); grid.style.setProperty('--odd-size', size); grid.innerHTML = '';
+      for (let i = 0; i < total; i++) {
+        const cell = $('button', 'odd-cell', i === odd ? different : common); cell.setAttribute('aria-label', i === odd ? 'Odd symbol' : 'Matching symbol');
+        cell.onclick = () => { if (i === odd) { level++; status.textContent = `NICE SPOT! LEVEL ${level}`; round(); } else { status.textContent = `NOT THAT ONE — YOU REACHED LEVEL ${level}`; buttons.forEach(b => b.disabled = true); replay.hidden = false; } };
+        grid.append(cell);
+      }
+      buttons = [...grid.children]; status.textContent = `LEVEL ${level} · FIND THE DIFFERENT SYMBOL`;
+    }
+    let buttons = [];
+    const replay = button('PLAY AGAIN ↻', () => { level = 1; replay.hidden = true; round(); }, true); replay.hidden = true;
+    round();
   }
 
   function wordle() {
