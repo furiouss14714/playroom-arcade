@@ -20,3 +20,4 @@ The packaged app checks GitHub Releases when it starts and installs downloaded u
 
 
 
+
