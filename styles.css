@@ -40,3 +40,15 @@ body[data-theme] .hero-copy>p,body[data-theme] .hero-index,body[data-theme] .her
 /* Tile values stay readable on pale game tiles in every theme. */
 body[data-theme] .tile{color:#17181b}
 
+/* Give the kingdom enough width for readable role and building details. */
+.game-board.kingdom-board{display:block;width:100%;max-width:760px;min-height:0}
+.kingdom-columns{grid-template-columns:minmax(0,1fr)}
+.kingdom-jobs,.kingdom-buildings{max-height:none;overflow:visible}
+.kingdom-job{align-items:flex-start}
+.kingdom-job-info{flex:1;align-items:flex-start}
+.kingdom-job-info>span{flex:0 0 24px}
+.kingdom-job-info>div{flex:1;overflow-wrap:anywhere}
+.kingdom-job-info b{line-height:1.35;overflow-wrap:anywhere}
+.kingdom-job-info small{line-height:1.4}
+.kingdom-assign{flex:0 0 auto}
+

@@ -505,6 +505,7 @@
   }
 
   function kingdom() {
+    board.classList.add('kingdom-board');
     const key='playroom.kingdom.v1';
     const base={gold:120,wood:55,stone:35,food:90,people:8,soldiers:0,day:1,tax:1,jobs:{lumberjack:1,miner:1,farmer:2,collector:0,fisher:0,seller:0,builder:0,council:0,healer:0,blacksmith:0,baker:0,scholar:0},buildings:{house:0,farm:0,sawmill:0,mine:0,market:0,wall:0,harbor:0,councilHall:0,smithy:0,clinic:0,bakery:0,school:0},lastReport:'Your new kingdom is ready. Give everyone a home and a useful job.'};
     let state;
