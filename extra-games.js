@@ -1,10 +1,15 @@
 (() => {
   const meta = {
-    clicker: ['COIN CLICKER', '16 / IDLE', 'Tap for coins, buy upgrades, and unlock new looks. Your progress saves automatically.'],
+    clicker: ['COIN CLICKER', '16 / IDLE', 'Tap for coins, stack five upgrades, and unlock eight new looks. Your progress saves automatically.'],
     wordle: ['FIVE LETTER', '17 / WORDS', 'Guess the five-letter word in six tries. Green is right spot; gold is in the word.'],
     blackjack: ['BLACKJACK', '18 / CHANCE', 'Try to beat the dealer without going over 21.'],
     pong: ['PONG DUEL', '19 / ARCADE', 'Move with W/S or ↑/↓. First to five wins.'],
-    breakout: ['BRICK BREAKER', '20 / ARCADE', 'Move with ←/→ or A/D. Break every brick without dropping the ball.']
+    breakout: ['BRICK BREAKER', '20 / ARCADE', 'Move with ←/→ or A/D. Break every brick without dropping the ball.'],
+    higherlower: ['HIGHER OR LOWER', '21 / CHANCE', 'Guess if the next card will be higher or lower. Build the longest streak.'],
+    diceduel: ['DICE DUEL', '22 / CHANCE', 'Roll against the arcade. First to three wins the match.'],
+    colormatch: ['COLOR CHECK', '23 / REFLEX', 'Decide if the color of the word matches the word itself. Score before time runs out.'],
+    sequence: ['NUMBER SEQUENCE', '24 / MEMORY', 'Memorize each number string and type it back. How long can you last?'],
+    targettap: ['TARGET TAP', '25 / ACTION', 'Tap the moving star as many times as you can in twenty seconds.']
   };
   const modal = document.getElementById('game-modal');
   const board = document.getElementById('game-board');
@@ -20,23 +25,30 @@
     title.textContent = info[0]; category.textContent = info[1]; instructions.textContent = info[2];
     board.innerHTML = ''; status.textContent = ''; controls.innerHTML = '';
     modal.classList.add('open'); modal.setAttribute('aria-hidden', 'false'); document.body.style.overflow = 'hidden';
-    const cleanup = ({ clicker: clicker, wordle: wordle, blackjack: blackjack, pong: pong, breakout: breakout })[id]();
+    const cleanup = ({ clicker: clicker, wordle: wordle, blackjack: blackjack, pong: pong, breakout: breakout, higherlower: higherlower, diceduel: diceduel, colormatch: colormatch, sequence: sequence, targettap: targettap })[id]();
     window.__extraGameCleanup = cleanup || (() => {});
   }
   window.addEventListener('playroom:open-extra', e => open(e.detail));
 
   function clicker() {
     const key = 'playroom.clicker.v1';
-    const defaults = { coins: 0, power: 1, powerLevel: 0, auto: 0, owned: ['classic'], skin: 'classic' };
+    const defaults = { coins: 0, power: 1, powerLevel: 0, auto: 0, multiplierLevel: 0, luckyLevel: 0, turboLevel: 0, owned: ['classic'], skin: 'classic' };
     let data;
     try { data = { ...defaults, ...JSON.parse(localStorage.getItem(key) || '{}') }; } catch { data = { ...defaults }; }
     data.owned = Array.isArray(data.owned) ? data.owned : ['classic'];
     if (!data.owned.includes('classic')) data.owned.unshift('classic');
+    ['coins', 'powerLevel', 'auto', 'multiplierLevel', 'luckyLevel', 'turboLevel'].forEach(k => { if (!Number.isFinite(data[k]) || data[k] < 0) data[k] = defaults[k]; });
+    if (!Number.isFinite(data.power) || data.power < 1) data.power = 1;
     const skins = [
       { id: 'classic', name: 'CLASSIC', cost: 0, face: '🟡' },
       { id: 'peach', name: 'PEACH', cost: 100, face: '🍑' },
       { id: 'ocean', name: 'OCEAN', cost: 250, face: '🔵' },
-      { id: 'grape', name: 'GRAPE', cost: 500, face: '🍇' }
+      { id: 'grape', name: 'GRAPE', cost: 500, face: '🍇' },
+      { id: 'sunset', name: 'SUNSET', cost: 750, face: '🌅' },
+      { id: 'mint', name: 'MINT', cost: 1100, face: '🌿' },
+      { id: 'cosmic', name: 'COSMIC', cost: 1600, face: '🌌' },
+      { id: 'cherry', name: 'CHERRY', cost: 2400, face: '🍒' },
+      { id: 'gold', name: 'GOLD', cost: 4000, face: '🌟' }
     ];
     const wrap = $('div', 'clicker-wrap');
     const wallet = $('div', 'clicker-wallet');
@@ -48,22 +60,29 @@
     coin.innerHTML = '<span class="coin-face"></span><span class="coin-tap">TAP!</span>';
     const shop = $('div', 'clicker-shop');
     const upgradeHeading = $('h3', '', 'UPGRADES');
-    const powerButton = $('button', 'shop-button');
-    const autoButton = $('button', 'shop-button');
+    const upgrades = [
+      { name: 'CLICK POWER', info: '+1 PER TAP', level: () => data.powerLevel, cost: () => 25 + data.powerLevel * 30, buy: () => { data.powerLevel++; data.power++; } },
+      { name: 'AUTO CLICK', info: '+1 PER SEC', level: () => data.auto, cost: () => Math.round(60 * Math.pow(1.65, data.auto)), buy: () => { data.auto++; } },
+      { name: 'COIN MULTIPLIER', info: '2× TAP VALUE', level: () => data.multiplierLevel, cost: () => Math.round(400 * Math.pow(2.1, data.multiplierLevel)), buy: () => { data.multiplierLevel++; } },
+      { name: 'LUCKY TAP', info: '+5% CHANCE FOR 5×', level: () => data.luckyLevel, cost: () => Math.round(250 * Math.pow(1.9, data.luckyLevel)), buy: () => { data.luckyLevel++; } },
+      { name: 'AUTO TURBO', info: '+5 PER SEC', level: () => data.turboLevel, cost: () => Math.round(900 * Math.pow(2, data.turboLevel)), buy: () => { data.turboLevel++; } }
+    ];
+    const upgradeButtons = upgrades.map(() => $('button', 'shop-button'));
     const skinHeading = $('h3', '', 'SKINS');
     const skinList = $('div', 'skin-list');
-    shop.append(upgradeHeading, powerButton, autoButton, skinHeading, skinList);
+    shop.append(upgradeHeading, ...upgradeButtons, skinHeading, skinList);
     wrap.append(wallet, coin, shop); board.append(wrap);
-    const powerCost = () => 25 + data.powerLevel * 30;
-    const autoCost = () => Math.round(60 * Math.pow(1.65, data.auto));
     function save() { localStorage.setItem(key, JSON.stringify(data)); }
     function paint() {
       coinCount.textContent = Math.floor(data.coins).toLocaleString();
       coin.className = `coin-button skin-${data.skin}`;
       coin.querySelector('.coin-face').textContent = skins.find(s => s.id === data.skin)?.face || '🟡';
-      powerButton.innerHTML = `CLICK POWER <b>+1</b><small>LV ${data.powerLevel} · ${powerCost()} COINS</small>`;
-      autoButton.innerHTML = `AUTO CLICK <b>+1 / SEC</b><small>LV ${data.auto} · ${autoCost()} COINS</small>`;
-      powerButton.disabled = data.coins < powerCost(); autoButton.disabled = data.coins < autoCost();
+      upgrades.forEach((u, i) => {
+        const cost = u.cost(), b = upgradeButtons[i];
+        b.innerHTML = `${u.name}<b>${u.info}</b><small>LV ${u.level()} · ${cost.toLocaleString()} COINS</small>`;
+        b.disabled = data.coins < cost;
+        b.onclick = () => { if (data.coins < cost) return; data.coins -= cost; u.buy(); paint(); status.textContent = `${u.name} UPGRADED!`; };
+      });
       skinList.innerHTML = '';
       skins.forEach(s => {
         const b = $('button', `skin-choice skin-${s.id}${data.skin === s.id ? ' selected' : ''}`);
@@ -74,11 +93,147 @@
       });
       save();
     }
-    coin.onclick = () => { data.coins += data.power; paint(); coin.classList.remove('coin-pop'); void coin.offsetWidth; coin.classList.add('coin-pop'); };
-    powerButton.onclick = () => { const cost = powerCost(); if (data.coins < cost) return; data.coins -= cost; data.powerLevel++; data.power++; paint(); status.textContent = `CLICK POWER IS NOW ${data.power} COINS`; };
-    autoButton.onclick = () => { const cost = autoCost(); if (data.coins < cost) return; data.coins -= cost; data.auto++; paint(); status.textContent = `AUTO CLICKER: ${data.auto} COINS PER SECOND`; };
-    const timer = setInterval(() => { if (data.auto) { data.coins += data.auto; paint(); } }, 1000);
+    coin.onclick = () => {
+      const base = data.power * Math.pow(2, data.multiplierLevel);
+      const lucky = Math.random() < Math.min(0.5, data.luckyLevel * 0.05);
+      const earned = Math.round(base * (lucky ? 5 : 1));
+      data.coins += earned; paint();
+      status.textContent = lucky ? `LUCKY TAP! +${earned} COINS` : `+${earned} COINS`;
+      coin.classList.remove('coin-pop'); void coin.offsetWidth; coin.classList.add('coin-pop');
+    };
+    const timer = setInterval(() => { const income = data.auto + data.turboLevel * 5; if (income) { data.coins += income; paint(); } }, 1000);
     paint(); status.textContent = 'YOUR COINS AND SKINS SAVE ON THIS DEVICE';
+    return () => clearInterval(timer);
+  }
+
+  function higherlower() {
+    const suits = ['♥', '♦', '♣', '♠'];
+    const face = value => ({ 1: 'A', 11: 'J', 12: 'Q', 13: 'K' }[value] || value);
+    let current = 1 + Math.floor(Math.random() * 13), streak = 0, best = Number(localStorage.getItem('playroom.higherlower.best') || 0);
+    const row = $('div', 'higher-lower-row');
+    const card = $('div', 'higher-lower-card');
+    const next = $('div', 'higher-lower-next', '?');
+    let suit = suits[Math.floor(Math.random() * suits.length)];
+    const score = $('div', 'higher-lower-score');
+    row.append(card, $('span', '', '→'), next); board.append(row, score);
+    function paint() {
+      card.textContent = `${face(current)} ${suit}`;
+      card.className = `higher-lower-card ${suit === '♥' || suit === '♦' ? 'red' : ''}`;
+      score.textContent = `STREAK ${streak} · BEST ${best}`;
+    }
+    function guess(direction) {
+      const previous = current;
+      current = 1 + Math.floor(Math.random() * 13);
+      suit = suits[Math.floor(Math.random() * suits.length)];
+      next.textContent = `${face(current)} ${suit}`;
+      const correct = current === previous || (direction === 'higher' ? current > previous : current < previous);
+      if (correct) { streak++; best = Math.max(best, streak); localStorage.setItem('playroom.higherlower.best', String(best)); status.textContent = current === previous ? 'A TIE! STREAK SAVED.' : 'NICE PICK!'; }
+      else { status.textContent = `STREAK ENDED AT ${streak}. TRY AGAIN!`; streak = 0; }
+      paint();
+    }
+    button('HIGHER ▲', () => guess('higher'));
+    button('LOWER ▼', () => guess('lower'), true);
+    paint(); status.textContent = 'PICK THE NEXT CARD';
+  }
+
+  function diceduel() {
+    const faces = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
+    let player = 0, arcade = 0, round = 0, ended = false;
+    const wrap = $('div', 'dice-duel');
+    const dice = $('div', 'dice-pair');
+    const score = $('div', 'dice-score');
+    wrap.append(dice, score); board.append(wrap);
+    const rollButton = button('ROLL DICE 🎲', roll);
+    function paint(a = 0, b = 0) {
+      dice.innerHTML = `<span>${faces[a]}</span><span>${faces[b]}</span>`;
+      score.textContent = `YOU ${player} · ${arcade} ARCADE`;
+      rollButton.disabled = ended;
+    }
+    function roll() {
+      if (ended) return;
+      const a = Math.floor(Math.random() * 6), b = Math.floor(Math.random() * 6);
+      round++;
+      if (a > b) player++; else if (b > a) arcade++;
+      if (player === 3 || arcade === 3) ended = true;
+      paint(a, b);
+      status.textContent = ended ? (player > arcade ? 'YOU WIN THE DUEL!' : 'THE ARCADE TAKES IT!') : `ROUND ${round} · ${a === b ? 'TIE ROUND' : a > b ? 'YOUR POINT' : 'ARCADE POINT'}`;
+    }
+    button('NEW MATCH ↻', () => { player = 0; arcade = 0; round = 0; ended = false; paint(); status.textContent = 'FIRST TO THREE WINS'; }, true);
+    paint(); status.textContent = 'FIRST TO THREE WINS';
+  }
+
+  function colormatch() {
+    const colors = [{ name: 'RED', hex: '#ed4966' }, { name: 'BLUE', hex: '#4264d5' }, { name: 'GREEN', hex: '#44945a' }, { name: 'PURPLE', hex: '#8c55bd' }];
+    let score = 0, seconds = 20, ended = false, word, ink;
+    const prompt = $('div', 'color-match-prompt');
+    const clock = $('div', 'color-match-clock');
+    board.append(prompt, clock);
+    function next() { word = colors[Math.floor(Math.random() * colors.length)]; ink = colors[Math.floor(Math.random() * colors.length)]; prompt.textContent = word.name; prompt.style.color = ink.hex; }
+    function answer(saysMatch) {
+      if (ended) return;
+      if ((word.name === ink.name) === saysMatch) { score++; status.textContent = 'GOOD EYE!'; } else { score = Math.max(0, score - 1); status.textContent = 'NOT QUITE — KEEP GOING'; }
+      next(); clock.textContent = `SCORE ${score} · ${seconds} SEC`;
+    }
+    button('MATCH ✓', () => answer(true)); button('NO MATCH ✕', () => answer(false), true);
+    next(); clock.textContent = `SCORE 0 · ${seconds} SEC`;
+    const timer = setInterval(() => {
+      seconds--; clock.textContent = `SCORE ${score} · ${seconds} SEC`;
+      if (seconds <= 0) { ended = true; clearInterval(timer); status.textContent = `TIME! YOU SCORED ${score}.`; }
+    }, 1000);
+    status.textContent = 'DOES THE WORD MATCH ITS COLOR?';
+    return () => clearInterval(timer);
+  }
+
+  function sequence() {
+    let digits = '', level = 3, locked = true, revealTimer;
+    const display = $('div', 'sequence-display');
+    const input = $('input', 'arcade-input');
+    input.inputMode = 'numeric'; input.maxLength = 14; input.placeholder = 'TYPE THE NUMBERS'; input.setAttribute('aria-label', 'Type the number sequence');
+    board.append(display, input);
+    const submit = button('CHECK ↵', check);
+    function round() {
+      locked = true; input.value = ''; input.disabled = true; submit.disabled = true;
+      digits = Array.from({ length: level }, () => Math.floor(Math.random() * 10)).join('');
+      display.textContent = digits; status.textContent = `LEVEL ${level} · MEMORIZE`;
+      revealTimer = setTimeout(() => { display.textContent = '• '.repeat(level).trim(); input.disabled = false; submit.disabled = false; input.focus(); locked = false; status.textContent = 'NOW TYPE THE SEQUENCE'; }, Math.max(1200, 650 + level * 260));
+    }
+    function check() {
+      if (locked || !input.value) return;
+      locked = true;
+      if (input.value === digits) { level++; display.textContent = '✓'; status.textContent = 'PERFECT! NEXT LEVEL…'; setTimeout(round, 700); }
+      else { display.textContent = digits; status.textContent = `OOPS! LEVEL ${level}. TRY AGAIN.`; level = 3; button('PLAY AGAIN ↻', round, true); }
+    }
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') check(); });
+    round();
+    return () => clearTimeout(revealTimer);
+  }
+
+  function targettap() {
+    let hits = 0, seconds = 20, ended = false, target = Math.floor(Math.random() * 9), timer;
+    const grid = $('div', 'target-grid');
+    const clock = $('div', 'target-clock');
+    board.append(grid, clock);
+    const replay = button('PLAY AGAIN ↻', start, true);
+    replay.hidden = true;
+    function paint() {
+      grid.innerHTML = '';
+      for (let i = 0; i < 9; i++) {
+        const cell = $('button', `target-cell${i === target ? ' target-star' : ''}`, i === target ? '✳' : '');
+        cell.setAttribute('aria-label', i === target ? 'Tap the star target' : 'Empty target');
+        cell.disabled = ended;
+        cell.onclick = () => { if (ended || i !== target) return; hits++; target = Math.floor(Math.random() * 9); if (target === i) target = (target + 1) % 9; paint(); clock.textContent = `${hits} HITS · ${seconds} SEC`; };
+        grid.append(cell);
+      }
+    }
+    function start() {
+      clearInterval(timer); hits = 0; seconds = 20; ended = false; target = Math.floor(Math.random() * 9);
+      replay.hidden = true; paint(); clock.textContent = '0 HITS · 20 SEC'; status.textContent = 'CATCH THE STAR!';
+      timer = setInterval(() => {
+        seconds--; clock.textContent = `${hits} HITS · ${seconds} SEC`;
+        if (seconds <= 0) { ended = true; clearInterval(timer); paint(); replay.hidden = false; status.textContent = `TIME! YOU CAUGHT ${hits} STARS.`; }
+      }, 1000);
+    }
+    start();
     return () => clearInterval(timer);
   }
 
