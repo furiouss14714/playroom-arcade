@@ -1,6 +1,6 @@
 # Playroom Arcade
 
-Playroom Arcade opens as its own desktop window with twenty-eight games and twenty selectable color themes.
+Playroom Arcade opens as its own desktop window with twenty-nine games and twenty selectable color themes.
 
 Choose a theme from the top bar. Your theme choice is saved on your device.
 

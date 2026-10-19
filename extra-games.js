@@ -3,7 +3,7 @@
     clicker: ['COIN CLICKER', '16 / IDLE', 'Tap, buy upgrades, collect skins, and rebirth for permanent power. Your progress saves automatically.'],
     wordle: ['FIVE LETTER', '17 / WORDS', 'Guess the five-letter word in six tries. Green is right spot; gold is in the word.'],
     blackjack: ['BLACKJACK', '18 / CHANCE', 'Try to beat the dealer without going over 21.'],
-    pong: ['PONG DUEL', '19 / ARCADE', 'Move with W/S or ↑/↓. The ball starts slower and speeds up slightly after paddle hits. First to five wins.'],
+    pong: ['PONG DUEL', '19 / ARCADE', 'Move with W/S or ↑/↓. The ball moves at a gentler pace and only speeds up a little after paddle hits. First to five wins.'],
     breakout: ['BRICK BREAKER', '20 / ARCADE', 'Move with ←/→ or A/D. Break every brick without dropping the ball.'],
     higherlower: ['HIGHER OR LOWER', '21 / CHANCE', 'Guess if the next card will be higher or lower. Build the longest streak.'],
     diceduel: ['DICE DUEL', '22 / CHANCE', 'Roll against the arcade. First to three wins the match.'],
@@ -12,7 +12,8 @@
     targettap: ['TARGET TAP', '25 / ACTION', 'Tap the moving star as many times as you can in twenty seconds.'],
     patternlock: ['PATTERN LOCK', '26 / MEMORY', 'Watch the glowing path, then repeat it in order. Each round adds another step.'],
     dodgedrop: ['DODGE DROP', '27 / ACTION', 'Move left and right to dodge the falling blocks. The pace rises as you survive. Use arrow keys or A and D.'],
-    oddoneout: ['ODD ONE OUT', '28 / FOCUS', 'Find the one symbol that is different. Each round gets a little busier.']
+    oddoneout: ['ODD ONE OUT', '28 / FOCUS', 'Find the one symbol that is different. Each round gets a little busier.'],
+    kingdom: ['CROWN & COUNTRY', '29 / STRATEGY', 'Rule a growing realm: house citizens, assign work, build vital structures, collect taxes, and defend against rival kingdoms.']
   };
   const modal = document.getElementById('game-modal');
   const board = document.getElementById('game-board');
@@ -28,7 +29,7 @@
     title.textContent = info[0]; category.textContent = info[1]; instructions.textContent = info[2];
     board.innerHTML = ''; status.textContent = ''; controls.innerHTML = '';
     modal.classList.add('open'); modal.setAttribute('aria-hidden', 'false'); document.body.style.overflow = 'hidden';
-    const cleanup = ({ clicker: clicker, wordle: wordle, blackjack: blackjack, pong: pong, breakout: breakout, higherlower: higherlower, diceduel: diceduel, colormatch: colormatch, sequence: sequence, targettap: targettap, patternlock: patternlock, dodgedrop: dodgedrop, oddoneout: oddoneout })[id]();
+    const cleanup = ({ clicker: clicker, wordle: wordle, blackjack: blackjack, pong: pong, breakout: breakout, higherlower: higherlower, diceduel: diceduel, colormatch: colormatch, sequence: sequence, targettap: targettap, patternlock: patternlock, dodgedrop: dodgedrop, oddoneout: oddoneout, kingdom: kingdom })[id]();
     window.__extraGameCleanup = cleanup || (() => {});
   }
   window.addEventListener('playroom:open-extra', e => open(e.detail));
@@ -501,5 +502,127 @@
     const onKey=e=>{const k=e.key.toLowerCase();if(['arrowleft','arrowright','a','d'].includes(k)){keys[k==='arrowleft'?'ArrowLeft':k==='arrowright'?'ArrowRight':k]=e.type==='keydown';e.preventDefault()}};
     window.addEventListener('keydown',onKey);window.addEventListener('keyup',onKey);timer=setInterval(tick,16);button('RESTART ↻',reset,true);reset();
     return()=>{clearInterval(timer);window.removeEventListener('keydown',onKey);window.removeEventListener('keyup',onKey)};
+  }
+
+  function kingdom() {
+    const key = 'playroom.kingdom.v1';
+    const base = { gold: 120, wood: 55, stone: 35, food: 90, people: 8, soldiers: 0, day: 1, tax: 1, jobs: { lumberjack: 1, miner: 1, farmer: 2, collector: 0 }, buildings: { house: 0, farm: 0, sawmill: 0, mine: 0, market: 0, wall: 0 }, lastReport: 'Your new kingdom is ready. Give everyone a home and a useful job.' };
+    let state;
+    try { state = { ...base, ...JSON.parse(localStorage.getItem(key) || '{}') }; } catch { state = { ...base }; }
+    state.jobs = { ...base.jobs, ...(state.jobs || {}) }; state.buildings = { ...base.buildings, ...(state.buildings || {}) };
+    for (const k of ['gold','wood','stone','food','people','soldiers','day','tax']) if (!Number.isFinite(state[k]) || state[k] < 0) state[k] = base[k];
+    const root = $('div', 'kingdom-game');
+    const top = $('div', 'kingdom-top');
+    const crest = $('div', 'kingdom-crest', '♛');
+    const headline = $('div', 'kingdom-headline'); headline.innerHTML = '<strong>YOUR REALM</strong><span>BUILD A HOME FOR EVERYONE</span>';
+    const dayBadge = $('div', 'kingdom-day'); top.append(crest, headline, dayBadge);
+    const resources = $('div', 'kingdom-resources');
+    const population = $('div', 'kingdom-population');
+    const columns = $('div', 'kingdom-columns');
+    const workforce = $('section', 'kingdom-panel');
+    const buildingPanel = $('section', 'kingdom-panel');
+    const event = $('div', 'kingdom-report');
+    const workforceTitle = $('h3', '', 'CIVILIAN WORK');
+    const buildingTitle = $('h3', '', 'BUILD & IMPROVE');
+    const jobRows = $('div', 'kingdom-jobs');
+    const buildingRows = $('div', 'kingdom-buildings');
+    workforce.append(workforceTitle, jobRows);
+    buildingPanel.append(buildingTitle, buildingRows);
+    columns.append(workforce, buildingPanel);
+    root.append(top, resources, population, columns, event);
+    board.append(root);
+    const resourceInfo = [['gold','🪙','GOLD'],['food','🌾','FOOD'],['wood','🪵','WOOD'],['stone','🪨','STONE']];
+    const resourceEls = {};
+    resourceInfo.forEach(([id, icon, name]) => { const item = $('div', 'kingdom-resource'); item.innerHTML = `<span>${icon}</span><small>${name}</small><strong>0</strong>`; resources.append(item); resourceEls[id] = item.querySelector('strong'); });
+    const jobTypes = [
+      ['lumberjack','🪓','LUMBERJACK','wood','Gathers logs for homes and workshops.'],
+      ['miner','⛏️','MINER','stone','Quarries stone for sturdy buildings.'],
+      ['farmer','🌾','FARMER','food','Grows food so your people can thrive.'],
+      ['collector','📜','TAX COLLECTOR','gold','Collects taxes from your growing town.']
+    ];
+    const jobControls = {};
+    jobTypes.forEach(([id, icon, name, output, help]) => {
+      const row = $('div', 'kingdom-job');
+      const info = $('div', 'kingdom-job-info'); info.innerHTML = `<span>${icon}</span><div><b>${name}</b><small>${help}</small></div>`;
+      const assign = $('div', 'kingdom-assign');
+      const less = $('button', 'kingdom-step', '−'), count = $('strong', '', '0'), more = $('button', 'kingdom-step', '+');
+      less.type = more.type = 'button'; less.setAttribute('aria-label', `Remove a ${name.toLowerCase()}`); more.setAttribute('aria-label', `Assign a ${name.toLowerCase()}`);
+      less.onclick = () => { if (state.jobs[id]) { state.jobs[id]--; paint(); } };
+      more.onclick = () => { if (available() > 0) { state.jobs[id]++; paint(); } };
+      assign.append(less, count, more); row.append(info, assign); jobRows.append(row); jobControls[id] = { less, count, more };
+    });
+    const structures = [
+      ['house','🏠','COTTAGE','Adds 6 beds so more families can settle.','wood',24,'stone',10,'gold',35],
+      ['farm','🌱','COMMUNITY GARDEN','Each farmer grows more food.','wood',18,'stone',8,'gold',25],
+      ['sawmill','🪚','SAWMILL','Lumberjacks bring in extra wood.','wood',32,'stone',16,'gold',55],
+      ['mine','⛏','STONE MINE','Miners bring in extra stone.','wood',28,'stone',22,'gold',65],
+      ['market','🏪','MARKET SQUARE','Tax collectors earn more gold.','wood',40,'stone',26,'gold',90],
+      ['wall','🛡️','DEFENSIVE WALL','Helps your soldiers repel rival raids.','wood',35,'stone',44,'gold',80]
+    ];
+    const structureControls = [];
+    structures.forEach(([id, icon, name, desc, r1, c1, r2, c2, r3, c3]) => {
+      const row = $('div', 'kingdom-build-row'); const info = $('div', 'kingdom-build-info');
+      const costText = `${c1} wood · ${c2} stone · ${c3} gold`;
+      info.innerHTML = `<b><span>${icon}</span> ${name}</b><small>${desc}</small><em>${costText}</em>`;
+      const build = $('button', 'kingdom-build', 'BUILD'); build.type = 'button';
+      build.onclick = () => { if (state[r1] < c1 || state[r2] < c2 || state[r3] < c3) return; state[r1] -= c1; state[r2] -= c2; state[r3] -= c3; state.buildings[id]++; state.lastReport = `${name} completed! Your kingdom grows stronger.`; paint(); };
+      row.append(info, build); buildingRows.append(row); structureControls.push({ id, r1,c1,r2,c2,r3,c3,build });
+    });
+    const army = $('div', 'kingdom-army');
+    const armyInfo = $('div', 'kingdom-army-info'); armyInfo.innerHTML = '<b>⚔️ ROYAL GUARD <span></span></b><small>Soldiers protect the kingdom when rivals attack.</small><em>1 citizen · 16 food · 28 gold</em>';
+    const recruit = $('button', 'kingdom-recruit', 'RECRUIT'); recruit.type = 'button'; recruit.onclick = () => {
+      if (!available() || state.food < 16 || state.gold < 28) return;
+      state.food -= 16; state.gold -= 28; state.soldiers++; state.lastReport = 'A new guard has joined your royal army.'; paint();
+    };
+    army.append(armyInfo, recruit); buildingPanel.append(army);
+    function available() { return Math.max(0, state.people - state.soldiers - Object.values(state.jobs).reduce((a,b)=>a+b,0)); }
+    function save() { localStorage.setItem(key, JSON.stringify(state)); }
+    function paint() {
+      resourceInfo.forEach(([id]) => resourceEls[id].textContent = Math.floor(state[id]).toLocaleString());
+      const cap = 12 + state.buildings.house * 6;
+      dayBadge.textContent = `DAY ${state.day}`;
+      population.innerHTML = `<span>👥</span><b>${state.people} / ${cap}</b><small> residents · ${available()} ready to work</small><span class="kingdom-army-count">⚔️ ${state.soldiers} guards</span>`;
+      jobTypes.forEach(([id]) => { const c = jobControls[id]; c.count.textContent = state.jobs[id]; c.less.disabled = !state.jobs[id]; c.more.disabled = !available(); });
+      structureControls.forEach(({id,r1,c1,r2,c2,r3,c3,build}) => { build.disabled = state[r1] < c1 || state[r2] < c2 || state[r3] < c3; build.textContent = `BUILD · ${state.buildings[id]}`; });
+      recruit.disabled = !available() || state.food < 16 || state.gold < 28;
+      armyInfo.querySelector('b span').textContent = `× ${state.soldiers}`;
+      event.textContent = state.lastReport;
+      save();
+    }
+    let cycle = 0, raidTimer;
+    function scheduleRaid() {
+      clearTimeout(raidTimer);
+      raidTimer = setTimeout(() => {
+        const threat = 2 + Math.floor(state.day / 2) + Math.floor(Math.random() * 4);
+        const defense = state.soldiers * 2 + state.buildings.wall * 4;
+        if (defense >= threat) {
+          state.gold += 15 + threat * 4; state.food += 12;
+          state.lastReport = `RIVAL RAID REPELLED! Your guards turned back ${threat} raiders. The town celebrates.`;
+        } else {
+          const loss = Math.min(state.soldiers, Math.max(1, threat - Math.floor(defense / 2)));
+          state.soldiers -= loss;
+          const stolen = Math.min(state.gold, threat * 12); state.gold -= stolen;
+          state.lastReport = `RIVALS RAIDED THE BORDER. ${loss} guard${loss===1?'':'s'} fell and the raiders stole ${stolen} gold. Build walls and recruit more guards.`;
+        }
+        paint(); scheduleRaid();
+      }, 30000 + Math.random() * 18000);
+    }
+    const timer = setInterval(() => {
+      state.wood += state.jobs.lumberjack * .42 * (1 + state.buildings.sawmill * .35);
+      state.stone += state.jobs.miner * .32 * (1 + state.buildings.mine * .4);
+      state.food += state.jobs.farmer * .48 * (1 + state.buildings.farm * .45);
+      state.gold += state.jobs.collector * .32 * (1 + state.buildings.market * .5) + state.tax * .08;
+      if (++cycle % 10 === 0) {
+        state.day++;
+        state.food = Math.max(0, state.food - state.people * .65);
+        const capacity = 12 + state.buildings.house * 6;
+        if (state.people < capacity && state.food >= state.people * .4) { state.people++; state.food -= state.people * .4; state.lastReport = `A new family settled in town. Welcome, resident ${state.people}!`; }
+        else if (state.food === 0 && state.people > 4 && state.day % 2 === 0) { state.people--; state.lastReport = 'Food ran short. Some residents left to seek a safer home. Add farmers or gardens.'; }
+      }
+      paint();
+    }, 1000);
+    button('SET FAIR TAXES', () => { if (state.gold < 30) { status.textContent = 'NEED 30 GOLD TO SETTLE THE TAX RATE'; return; } state.gold -= 30; state.tax = Math.min(12, state.tax + 1); state.lastReport = `Tax rate adjusted to ${state.tax} coins a day. Keep it fair so the town can prosper.`; paint(); status.textContent = `TAX RATE ${state.tax}/DAY`; }, true);
+    paint(); scheduleRaid(); status.textContent = 'GROW YOUR TOWN · PREPARE FOR RIVAL RAIDS';
+    return () => { clearInterval(timer); clearTimeout(raidTimer); };
   }
 })();
