@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.cache/
+.vs/
+.env
+.env.*
+!.env.example
+*.log
+

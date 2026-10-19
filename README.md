@@ -1,3 +1,18 @@
 # Playroom Arcade
 
-A desktop arcade app built with Electron. Source code and release updater configuration will be published here.
+Playroom Arcade opens as its own desktop window and contains twenty games.
+
+## Run from this folder
+
+Install the app dependencies once with `npm install`, then launch it with `npm start`.
+
+## Build the Windows installer
+
+Run `npm run dist`. The installer is written to `dist/Playroom-Setup-1.0.1.exe`. It creates Start Menu and desktop shortcuts.
+
+The app loads the local game files; an internet connection is only needed for optional Google Fonts and update checks.
+
+## Publish an update
+
+The packaged app checks GitHub Releases when it starts and installs downloaded updates after the app closes. To publish a release, increase the version in `package.json`, commit and push the change, then push a matching tag such as `v1.0.2`. GitHub Actions builds the Windows installer and publishes the release files automatically.
+

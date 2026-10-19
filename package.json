@@ -1,0 +1,57 @@
+{
+  "name": "playroom-arcade",
+  "version": "1.0.1",
+  "description": "A little collection of games for your desktop.",
+  "main": "main.cjs",
+  "author": "Playroom",
+  "license": "UNLICENSED",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/furiouss14714/playroom-arcade.git"
+  },
+  "scripts": {
+    "start": "electron .",
+    "dist": "node build.cjs"
+  },
+  "devDependencies": {
+    "electron": "^40.0.0",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "com.playroom.arcade",
+    "productName": "Playroom Arcade",
+    "artifactName": "Playroom-Setup-${version}.${ext}",
+    "publish": [{
+      "provider": "github",
+      "owner": "furiouss14714",
+      "repo": "playroom-arcade",
+      "releaseType": "release"
+    }],
+    "files": [
+      "index.html",
+      "styles.css",
+      "script.js",
+      "extra-games.js",
+      "main.cjs"
+    ],
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Playroom Arcade"
+    }
+  },
+  "allowScripts": {
+    "electron@40.10.6": true,
+    "electron-winstaller@5.4.0": true
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.9"
+  }
+}
+

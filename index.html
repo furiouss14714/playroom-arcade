@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#101114" />
+  <title>PLAYROOM — little games, big breaks</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#home" aria-label="Playroom home"><span class="brand-mark">P<span>•</span></span><span>PLAYROOM</span></a>
+    <nav><a href="#games">THE ARCADE</a><a href="#about">ABOUT</a></nav>
+    <div class="top-right"><span class="online-dot"></span><span>OPEN FOR PLAY</span><button class="sound-toggle" id="sound-toggle" aria-label="Toggle sound">♪ <span>SOUND OFF</span></button></div>
+  </header>
+  <main id="home">
+    <section class="hero">
+      <div class="hero-copy"><div class="eyebrow"><span class="eyebrow-line"></span> YOUR POCKET-SIZED ARCADE <span class="sparkle">✳</span></div>
+        <h1>A LITTLE<br>PLAY GOES<br><span>A LONG WAY<span class="period">.</span></span></h1>
+        <p>Twenty tiny distractions for your very important break. Pick a game, find your flow, and stay a little longer.</p>
+        <a class="play-cta" href="#games"><span>FIND YOUR GAME</span><span class="cta-arrow">↘</span></a>
+      </div>
+      <div class="hero-art" aria-label="Colorful abstract arcade illustration">
+        <div class="art-grid"></div><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div>
+        <div class="sun"></div><div class="arcade-shape shape-pink">✳</div><div class="arcade-shape shape-blue">✦</div><div class="arcade-shape shape-lime">●</div>
+        <div class="art-label label-top">NO QUARTERS<br>REQUIRED ↗</div><div class="art-label label-bottom">EST. RIGHT NOW<br>PLAY NICE.</div>
+        <div class="art-sticker">PRESS<br>PLAY! <span>↗</span></div>
+      </div>
+      <div class="hero-index"><span>001</span> / THE GOOD KIND OF SCREEN TIME</div>
+    </section>
+    <section class="games-section" id="games">
+      <div class="section-head"><div><div class="eyebrow"><span class="eyebrow-line"></span> THE LINEUP</div><h2>WHAT FEELS<br><span>GOOD TODAY?</span></h2></div><div class="section-note">PICK A MOOD.<br>WE'LL HANDLE THE REST. <span>↓</span></div></div>
+      <div class="game-grid">
+        <button class="game-card card-memory" data-game="memory"><span class="card-top"><span>01 / FOCUS</span><span class="card-arrow">↗</span></span><span class="card-art memory-art"><span class="memory-tile t1">✳</span><span class="memory-tile t2">●</span><span class="memory-tile t3">?</span><span class="memory-tile t4">✦</span></span><span class="card-title">MEMORY<br>MATCH</span><span class="card-bottom"><span>Give your brain a little stretch.</span><span class="card-play">PLAY ↗</span></span></button>
+        <button class="game-card card-tictactoe" data-game="ttt"><span class="card-top"><span>02 / QUICK THINK</span><span class="card-arrow">↗</span></span><span class="card-art ttt-art"><span>×</span><span>○</span><span>×</span><span>○</span><span>×</span><span>○</span><span>○</span><span>×</span><span>×</span></span><span class="card-title">TIC TAC<br>TOE</span><span class="card-bottom"><span>One more round. You know it.</span><span class="card-play">PLAY ↗</span></span></button>
+        <button class="game-card card-rps" data-game="rps"><span class="card-top"><span>03 / CHANCE</span><span class="card-arrow">↗</span></span><span class="card-art rps-art"><span>✊</span><i>VS</i><span>✌️</span></span><span class="card-title">ROCK PAPER<br>SCISSORS</span><span class="card-bottom"><span>The ancient art of picking.</span><span class="card-play">PLAY ↗</span></span></button>
+        <button class="game-card card-snake" data-game="snake"><span class="card-top"><span>04 / FLOW STATE</span><span class="card-arrow">↗</span></span><span class="card-art snake-art"><span class="snake-body">●<b>●</b><b>●</b><b>●</b></span><span class="snake-food">✳</span></span><span class="card-title">SNAKE<br>BREAK</span><span class="card-bottom"><span>Go on, chase the little dot.</span><span class="card-play">PLAY ↗</span></span></button>
+        <button class="game-card card-2048" data-game="2048"><span class="card-top"><span>05 / PUZZLE</span><span class="card-arrow">↗</span></span><span class="card-art tiles-art"><span>2</span><span></span><span>4</span><span></span><span></span><span>8</span><span>2</span><span></span><span></span></span><span class="card-title">TILE<br>TRIP</span><span class="card-bottom"><span>Slide, stack, and see what clicks.</span><span class="card-play">PLAY ↗</span></span></button>
+        <button class="game-card card-memory" data-game="guess"><span class="card-top"><span>06 / LOGIC</span><span class="card-arrow">↗</span></span><span class="card-art extra-art">#<small>?</small></span><span class="card-title">NUMBER<br>HUNT</span><span class="card-bottom"><span>Find the secret number.</span><span class="card-play">PLAY ↗</span></span></button>
+        <button class="game-card card-tictactoe" data-game="reaction"><span class="card-top"><span>07 / REFLEX</span><span class="card-arrow">↗</span></span><span class="card-art extra-art">⚡</span><span class="card-title">QUICK<br>DRAW</span><span class="card-bottom"><span>How fast are your fingers?</span><span class="card-play">PLAY ↗</span></span></button>
+        <button class="game-card card-rps" data-game="whack"><span class="card-top"><span>08 / ACTION</span><span class="card-arrow">↗</span></span><span class="card-art extra-art">●<small>✳</small></span><span class="card-title">MOLE<br>PATROL</span><span class="card-bottom"><span>Catch as many as you can.</span><span class="card-play">PLAY ↗</span></span></button>
+        <button class="game-card card-snake" data-game="hangman"><span class="card-top"><span>09 / WORDS</span><span class="card-arrow">↗</span></span><span class="card-art extra-art">A<span>_ _ _</span></span><span class="card-title">WORD<br>GUESS</span><span class="card-bottom"><span>Guess the word, letter by letter.</span><span class="card-play">PLAY ↗</span></span></button>
+        <button class="game-card card-2048" data-game="simon"><span class="card-top"><span>10 / MEMORY</span><span class="card-arrow">↗</span></span><span class="card-art extra-art">◉</span><span class="card-title">SIMON<br>SAYS</span><span class="card-bottom"><span>Watch the pattern. Repeat it.</span><span class="card-play">PLAY ↗</span></span></button>
+        <button class="game-card card-rps" data-game="scramble"><span class="card-top"><span>11 / WORDS</span><span class="card-arrow">↗</span></span><span class="card-art extra-art">R A<br>M B L E</span><span class="card-title">WORD<br>SCRAMBLE</span><span class="card-bottom"><span>Unscramble the mixed-up word.</span><span class="card-play">PLAY ↗</span></span></button>
+        <button class="game-card card-memory" data-game="math"><span class="card-top"><span>12 / QUICK THINK</span><span class="card-arrow">↗</span></span><span class="card-art extra-art">7 × 8</span><span class="card-title">MATH<br>SPRINT</span><span class="card-bottom"><span>Ten sums. Beat your best.</span><span class="card-play">PLAY ↗</span></span></button>
+        <button class="game-card card-snake" data-game="connect"><span class="card-top"><span>13 / STRATEGY</span><span class="card-arrow">↗</span></span><span class="card-art extra-art">🔴 🔵</span><span class="card-title">FOUR IN<br>A ROW</span><span class="card-bottom"><span>Connect four before the arcade.</span><span class="card-play">PLAY ↗</span></span></button>
+        <button class="game-card card-2048" data-game="lights"><span class="card-top"><span>14 / PUZZLE</span><span class="card-arrow">↗</span></span><span class="card-art extra-art">✦ ◦ ✦</span><span class="card-title">LIGHTS<br>OUT</span><span class="card-bottom"><span>Flip the grid to dark.</span><span class="card-play">PLAY ↗</span></span></button>
+        <button class="game-card card-tictactoe" data-game="mines"><span class="card-top"><span>15 / PUZZLE</span><span class="card-arrow">↗</span></span><span class="card-art extra-art">▦</span><span class="card-title">MINE<br>SWEEPER</span><span class="card-bottom"><span>Clear the field. Avoid the mines.</span><span class="card-play">PLAY ↗</span></span></button>
+        <button class="game-card card-memory" data-game="clicker"><span class="card-top"><span>16 / IDLE</span><span class="card-arrow">↗</span></span><span class="card-art extra-art">◉<small>+</small></span><span class="card-title">COIN<br>CLICKER</span><span class="card-bottom"><span>Click, upgrade, customize.</span><span class="card-play">PLAY ↗</span></span></button>
+        <button class="game-card card-tictactoe" data-game="wordle"><span class="card-top"><span>17 / WORDS</span><span class="card-arrow">↗</span></span><span class="card-art extra-art">W O R D</span><span class="card-title">FIVE<br>LETTER</span><span class="card-bottom"><span>Find the hidden five-letter word.</span><span class="card-play">PLAY ↗</span></span></button>
+        <button class="game-card card-rps" data-game="blackjack"><span class="card-top"><span>18 / CHANCE</span><span class="card-arrow">↗</span></span><span class="card-art extra-art">21</span><span class="card-title">BLACK<br>JACK</span><span class="card-bottom"><span>Get close to 21. Beat the dealer.</span><span class="card-play">PLAY ↗</span></span></button>
+        <button class="game-card card-snake" data-game="pong"><span class="card-top"><span>19 / ARCADE</span><span class="card-arrow">↗</span></span><span class="card-art extra-art">◧ · ◨</span><span class="card-title">PONG<br>DUEL</span><span class="card-bottom"><span>First to five wins the rally.</span><span class="card-play">PLAY ↗</span></span></button>
+        <button class="game-card card-2048" data-game="breakout"><span class="card-top"><span>20 / ARCADE</span><span class="card-arrow">↗</span></span><span class="card-art extra-art">▰<small>●</small></span><span class="card-title">BRICK<br>BREAKER</span><span class="card-bottom"><span>Clear the bricks. Keep the ball up.</span><span class="card-play">PLAY ↗</span></span></button>
+      </div>
+    </section>
+    <section class="about-section" id="about"><span class="about-star">✳</span><div class="eyebrow"><span class="eyebrow-line"></span> A NOTE FROM THE ARCADE</div><p>Made for the in-between bits.<br><span>No downloads. No pressure.<br>Just <i>a little play.</i></span></p><span class="about-sign">— YOUR FRIENDS AT PLAYROOM</span></section>
+  </main>
+  <footer><a class="brand" href="#home"><span class="brand-mark">P<span>•</span></span><span>PLAYROOM</span></a><span>GOOD BREAKS, GOOD GAME.</span><span>© 2025 PLAYROOM ARCADE</span></footer>
+  <div class="modal" id="game-modal" aria-hidden="true"><div class="modal-backdrop" data-close></div><section class="game-dialog" role="dialog" aria-modal="true" aria-labelledby="game-name"><header class="dialog-head"><div class="brand"><span class="brand-mark">P<span>•</span></span><span>PLAYROOM</span></div><button id="close-game" class="close-button" aria-label="Close game">×</button></header><div class="game-content"><div class="game-meta"><span id="game-category">01 / FOCUS</span><span class="online-dot"></span> READY WHEN YOU ARE</div><h2 id="game-name">MEMORY MATCH</h2><p class="game-instructions" id="game-instructions"></p><div class="game-board" id="game-board"></div><div class="game-status" id="game-status" aria-live="polite"></div><div class="game-controls" id="game-controls"></div></div><div class="dialog-footer"><span>TAKE A BREATH. TAKE YOUR TIME.</span><span>ESC TO EXIT ↗</span></div></section></div>
+  <script src="script.js"></script>
+  <script src="extra-games.js"></script>
+</body>
+</html>
+
